@@ -49,7 +49,7 @@ async function resolveCategory(data) {
 export async function GET() {
   try {
     await connectDB();
-    const products = await Product.find({}).sort({ createdAt: -1 });
+    const products = await Product.find({}).sort({ createdAt: -1 }).lean();
     return NextResponse.json(products);
   } catch (error) {
     return NextResponse.json({ message: 'Internal Server Error', error: error.message }, { status: 500 });

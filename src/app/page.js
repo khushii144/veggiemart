@@ -80,7 +80,7 @@ export default function Home() {
       try {
         const res = await fetch('/api/products');
         const data = await res.json();
-        setProducts(data);
+        setProducts(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Failed to fetch products:', error);
       } finally {
@@ -114,7 +114,7 @@ export default function Home() {
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const filteredProducts = products.filter((product) => {
     const matchesSearch = normalizedSearch
-      ? product.name.toLowerCase().includes(normalizedSearch)
+      ? product.name?.toLowerCase().includes(normalizedSearch)
       : true;
       
     // Handle category match - case insensitive and flexible

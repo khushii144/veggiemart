@@ -106,7 +106,7 @@ export default function ProductDetailPage() {
         if (allRes.ok) {
           const allData = await allRes.json();
           // Filter out current product, take items in same category or just random ones
-          const filtered = allData.filter(p => p._id !== params.id).slice(0, 4);
+          const filtered = (Array.isArray(allData) ? allData : []).filter(p => p._id !== params.id).slice(0, 4);
           setRelatedProducts(filtered);
         }
       } catch (err) {

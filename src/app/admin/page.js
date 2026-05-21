@@ -29,17 +29,19 @@ export default function AdminDashboard() {
       
       const orderRes = await fetch('/api/orders');
       const orderData = await orderRes.json();
+      const products = Array.isArray(prodData) ? prodData : [];
+      const orders = Array.isArray(orderData) ? orderData : [];
       
-      const revenue = orderData.reduce((acc, curr) => acc + curr.totalAmount, 0);
+      const revenue = orders.reduce((acc, curr) => acc + curr.totalAmount, 0);
       
       setStats({
-        products: prodData.length || 0,
-        orders: orderData.length || 0,
+        products: products.length,
+        orders: orders.length,
         totalRevenue: revenue || 0,
       });
 
       // Get 5 most recent orders
-      setRecentOrders(orderData.slice(0, 5));
+      setRecentOrders(orders.slice(0, 5));
     } catch (error) {
       console.error(error);
     }

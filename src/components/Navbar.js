@@ -35,8 +35,9 @@ export default function Navbar() {
       const res = await fetch('/api/notifications');
       if (res.ok) {
         const data = await res.json();
-        setNotifications(data);
-        setUnreadCount(data.filter(n => !n.isRead).length);
+        const nextNotifications = Array.isArray(data) ? data : [];
+        setNotifications(nextNotifications);
+        setUnreadCount(nextNotifications.filter(n => !n.isRead).length);
       }
     } catch (err) {
       console.error('Failed to fetch notifications:', err);
