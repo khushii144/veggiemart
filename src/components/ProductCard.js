@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
+import Link from 'next/link';
 
-const fallbackImage =
-  'https://images.unsplash.com/photo-1540420773420-3366772f4999?q=80&w=900&auto=format&fit=crop';
+const fallbackImage = '/images/product-card-default.jpg';
 
 /* ── quantity options per vegetable type ─────────────────────── */
 const quantityOptions = {
@@ -58,12 +58,72 @@ function calcPrices(price, discountPct) {
 }
 
 /* ── component ───────────────────────────────────────────────── */
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, imageOverride }) {
   const { addToCart } = useCart();
-  const [imgSrc, setImgSrc]   = useState(product.image || fallbackImage);
+  const [imgSrc, setImgSrc]   = useState(imageOverride || product.image || fallbackImage);
   const options               = getQuantityOptions(product.name);
   const [qty, setQty]         = useState(options[0]);
   const { yourPrice, mrp, saving, pct } = calcPrices(product.price, product.discount);
+
+  // Subscription states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [subFreq, setSubFreq] = useState('weekly');
+  const [subQty, setSubQty] = useState(1);
+  const [deliveryDate, setDeliveryDate] = useState('Monday');
+
+  useEffect(() => {
+    setDeliveryDate(subFreq === 'weekly' ? 'Monday' : '1st of the month');
+  }, [subFreq]);
+
+  useEffect(() => {
+    setImgSrc(imageOverride || product.image || fallbackImage);
+  }, [imageOverride, product.image]);
+
+  const handleSubscribe = async () => {
+    try {
+      const response = await fetch('/api/subscription/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productId: product._id,
+          quantity: subQty,
+          frequency: subFreq,
+          deliveryDate: deliveryDate,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Something went wrong');
+      }
+
+      // Save locally as well
+      const newSubscription = {
+        id: data.subscription?._id || Date.now().toString(),
+        productId: product._id,
+        productName: product.name,
+        image: imgSrc,
+        size: qty,
+        quantity: subQty,
+        frequency: subFreq,
+        deliveryDate: deliveryDate,
+        price: Math.round(yourPrice * subQty * (subFreq === 'weekly' ? 0.9 : 0.85)),
+        createdAt: new Date().toISOString()
+      };
+      
+      const existing = JSON.parse(localStorage.getItem('veggiemart_subscriptions') || '[]');
+      existing.push(newSubscription);
+      localStorage.setItem('veggiemart_subscriptions', JSON.stringify(existing));
+      
+      alert(`Successfully subscribed to ${product.name}!`);
+      setIsModalOpen(false);
+    } catch (err) {
+      alert(`Subscription failed: ${err.message}`);
+    }
+  };
 
   return (
     <div style={styles.card}>
@@ -73,21 +133,25 @@ export default function ProductCard({ product }) {
       )}
 
       {/* ── product image ────────────────────────────────────── */}
-      <div style={styles.imageWrap}>
-        <img
-          src={imgSrc}
-          alt={product.name}
-          style={styles.image}
-          onError={() => setImgSrc(fallbackImage)}
-        />
-      </div>
+      <Link href={`/product/${product._id}`} style={{ display: 'block', textDecoration: 'none' }}>
+        <div style={styles.imageWrap}>
+          <img
+            src={imgSrc}
+            alt={product.name}
+            style={styles.image}
+            onError={() => setImgSrc(fallbackImage)}
+          />
+        </div>
+      </Link>
 
       {/* ── body ─────────────────────────────────────────────── */}
       <div style={styles.body}>
         {/* name */}
-        <h3 style={styles.name}>
-          {product.name.length > 30 ? product.name.slice(0, 30) + '…' : product.name}
-        </h3>
+        <Link href={`/product/${product._id}`} style={{ textDecoration: 'none', display: 'block' }}>
+          <h3 style={styles.name}>
+            {product.name.length > 30 ? product.name.slice(0, 30) + '…' : product.name}
+          </h3>
+        </Link>
 
         {/* quantity dropdown row */}
         <div style={styles.qtyRow}>
@@ -129,12 +193,132 @@ export default function ProductCard({ product }) {
         <button
           onClick={() => addToCart({ ...product, qty })}
           style={styles.cartBtn}
-          onMouseEnter={(e) => (e.currentTarget.style.background = '#e6a800')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = '#f5b800')}
+          onMouseEnter={(e) => (e.currentTarget.style.background = '#15803d')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = '#16a34a')}
         >
           Add to Cart
         </button>
+
+        {/* subscribe & save button */}
+        <button
+          onClick={() => setIsModalOpen(true)}
+          style={styles.subBtn}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#f4fbf7';
+            e.currentTarget.style.color = '#15803d';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = '#16a34a';
+          }}
+        >
+          Subscribe & Save
+        </button>
       </div>
+
+      {/* Subscription Modal */}
+      {isModalOpen && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContent}>
+            <button onClick={() => setIsModalOpen(false)} style={styles.modalClose}>×</button>
+            <h3 style={styles.modalTitle}>Wholesale Subscription</h3>
+            <p style={styles.modalSubtitle}>Set up recurring fresh deliveries of {product.name}</p>
+            
+            {/* Product preview */}
+            <div style={styles.modalPreview}>
+              <img src={imgSrc} alt={product.name} style={styles.modalPreviewImg} />
+              <div>
+                <div style={styles.modalPreviewName}>{product.name}</div>
+                <div style={styles.modalPreviewSize}>Pack Size: {qty}</div>
+                <div style={styles.modalPreviewPrice}>₹{yourPrice} / pack</div>
+              </div>
+            </div>
+
+            {/* Quantity */}
+            <div style={styles.modalField}>
+              <label style={styles.modalLabel}>Quantity (Packs)</label>
+              <div style={styles.qtyCounter}>
+                <button onClick={() => setSubQty(q => Math.max(1, q - 1))} style={styles.counterBtn}>-</button>
+                <span style={styles.counterValue}>{subQty}</span>
+                <button onClick={() => setSubQty(q => q + 1)} style={styles.counterBtn}>+</button>
+              </div>
+            </div>
+
+            {/* Frequency Cards */}
+            <div style={styles.modalField}>
+              <label style={styles.modalLabel}>Delivery Frequency</label>
+              <div style={styles.freqContainer}>
+                <div 
+                  onClick={() => setSubFreq('weekly')}
+                  style={{
+                    ...styles.freqCard,
+                    ...(subFreq === 'weekly' ? styles.freqCardActive : {})
+                  }}
+                >
+                  <div style={styles.freqTitle}>Weekly</div>
+                  <div style={styles.freqDiscount}>Save 10% Extra</div>
+                </div>
+                <div 
+                  onClick={() => setSubFreq('monthly')}
+                  style={{
+                    ...styles.freqCard,
+                    ...(subFreq === 'monthly' ? styles.freqCardActive : {})
+                  }}
+                >
+                  <div style={styles.freqTitle}>Monthly</div>
+                  <div style={styles.freqDiscount}>Save 15% Extra</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Preferred Delivery Date */}
+            <div style={styles.modalField}>
+              <label style={styles.modalLabel}>Preferred Delivery Day / Date</label>
+              <select
+                value={deliveryDate}
+                onChange={(e) => setDeliveryDate(e.target.value)}
+                style={styles.modalSelect}
+              >
+                {subFreq === 'weekly' ? (
+                  <>
+                    <option value="Monday">Monday</option>
+                    <option value="Wednesday">Wednesday</option>
+                    <option value="Friday">Friday</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="1st of the month">1st of the month</option>
+                    <option value="10th of the month">10th of the month</option>
+                    <option value="20th of the month">20th of the month</option>
+                  </>
+                )}
+              </select>
+            </div>
+
+            {/* Subscription Summary */}
+            <div style={styles.summaryBox}>
+              <div style={styles.summaryRow}>
+                <span>Base Price ({subQty} x ₹{yourPrice}):</span>
+                <span>₹{yourPrice * subQty}</span>
+              </div>
+              <div style={styles.summaryRow}>
+                <span>Subscription Discount ({subFreq === 'weekly' ? '10%' : '15%'}):</span>
+                <span style={{ color: '#16a34a' }}>-₹{Math.round(yourPrice * subQty * (subFreq === 'weekly' ? 0.1 : 0.15))}</span>
+              </div>
+              <hr style={{ border: 'none', borderTop: '1px dashed #e5e7eb', margin: '8px 0' }} />
+              <div style={{ ...styles.summaryRow, fontWeight: '800', fontSize: '15px' }}>
+                <span>Recurring Price:</span>
+                <span style={{ color: '#16a34a' }}>₹{Math.round(yourPrice * subQty * (subFreq === 'weekly' ? 0.9 : 0.85))}</span>
+              </div>
+            </div>
+
+            {/* Confirm button */}
+            <button onClick={handleSubscribe} style={styles.modalSubmitBtn}>
+              Confirm Subscription
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -150,10 +334,10 @@ const styles = {
     display:       'flex',
     flexDirection: 'column',
     width:         '100%',
-    maxWidth:      '220px',
+    maxWidth:      '245px',
     fontFamily:    "'Inter', 'Segoe UI', sans-serif",
-    boxShadow:     '0 1px 4px rgba(0,0,0,.07)',
-    transition:    'box-shadow .2s ease, transform .2s ease',
+    boxShadow:     'none',
+    transition:    'transform .2s ease',
   },
 
   /* red ribbon */
@@ -177,12 +361,12 @@ const styles = {
     alignItems:      'center',
     justifyContent:  'center',
     background:      '#fff',
-    padding:         '20px 16px 8px',
-    height:          '140px',
+    padding:         '24px 20px 10px',
+    height:          '165px',
   },
   image: {
-    maxHeight:  '120px',
-    maxWidth:   '140px',
+    maxHeight:  '145px',
+    maxWidth:   '165px',
     objectFit: 'contain',
   },
 
@@ -289,7 +473,7 @@ const styles = {
     color:       '#6b7280',
     cursor:      'pointer',
     textAlign:   'left',
-    textDecoration: 'underline',
+    textDecoration: 'none',
     fontFamily:  'inherit',
   },
 
@@ -304,13 +488,207 @@ const styles = {
     width:        'calc(100% + 28px)',
     marginLeft:   '-14px',
     padding:      '13px 0',
-    background:   '#f5b800',
-    color:        '#1a1a1a',
+    background:   '#16a34a',
+    color:        '#ffffff',
     border:       'none',
     fontSize:     '14px',
     fontWeight:   '700',
     cursor:       'pointer',
     letterSpacing: '.3px',
     transition:   'background .15s ease',
+  },
+  subBtn: {
+    width:        'calc(100% + 28px)',
+    marginLeft:   '-14px',
+    padding:      '12px 0',
+    background:   'transparent',
+    color:        '#16a34a',
+    border:       'none',
+    borderTop:    '1px solid #f3f4f6',
+    fontSize:     '13px',
+    fontWeight:   '700',
+    cursor:       'pointer',
+    letterSpacing: '.3px',
+    transition:   'all .15s ease',
+  },
+  
+  /* Modal Styles */
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backdropFilter: 'blur(4px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: '24px',
+    padding: '24px',
+    width: '90%',
+    maxWidth: '400px',
+    boxShadow: 'none',
+    border: '1px solid #e5e7eb',
+    position: 'relative',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+    fontFamily: "'Inter', sans-serif",
+  },
+  modalClose: {
+    position: 'absolute',
+    top: '16px',
+    right: '16px',
+    background: 'none',
+    border: 'none',
+    fontSize: '24px',
+    color: '#9ca3af',
+    cursor: 'pointer',
+  },
+  modalTitle: {
+    fontSize: '20px',
+    fontWeight: '800',
+    color: '#111827',
+    margin: 0,
+  },
+  modalSubtitle: {
+    fontSize: '13px',
+    color: '#6b7280',
+    margin: '-8px 0 0',
+  },
+  modalPreview: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    backgroundColor: '#f9fafb',
+    borderRadius: '12px',
+    padding: '12px',
+    border: '1px solid #f3f4f6',
+  },
+  modalPreviewImg: {
+    width: '60px',
+    height: '60px',
+    objectFit: 'contain',
+  },
+  modalPreviewName: {
+    fontSize: '14px',
+    fontWeight: '700',
+    color: '#111827',
+    margin: 0,
+  },
+  modalPreviewSize: {
+    fontSize: '12px',
+    color: '#6b7280',
+  },
+  modalPreviewPrice: {
+    fontSize: '13px',
+    fontWeight: '600',
+    color: '#374151',
+  },
+  modalField: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  modalLabel: {
+    fontSize: '13px',
+    fontWeight: '600',
+    color: '#374151',
+  },
+  modalSelect: {
+    width: '100%',
+    padding: '10px 12px',
+    fontSize: '14px',
+    border: '1px solid #d1d5db',
+    borderRadius: '12px',
+    background: '#fff',
+    color: '#374151',
+    cursor: 'pointer',
+    outline: 'none',
+    appearance: 'auto',
+  },
+  qtyCounter: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    backgroundColor: '#f3f4f6',
+    borderRadius: '12px',
+    padding: '4px',
+    alignSelf: 'flex-start',
+  },
+  counterBtn: {
+    width: '32px',
+    height: '32px',
+    borderRadius: '8px',
+    boxShadow: 'none',
+    border: '1px solid #e5e7eb',
+  },
+  counterValue: {
+    fontSize: '15px',
+    fontWeight: '700',
+    color: '#111827',
+    minWidth: '20px',
+    textAlign: 'center',
+  },
+  freqContainer: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '12px',
+  },
+  freqCard: {
+    borderWidth: '2px',
+    borderStyle: 'solid',
+    borderColor: '#e5e7eb',
+    borderRadius: '12px',
+    padding: '12px',
+    cursor: 'pointer',
+    textAlign: 'center',
+    transition: 'all 0.15s ease',
+  },
+  freqCardActive: {
+    borderColor: '#16a34a',
+    backgroundColor: '#f4fbf7',
+  },
+  freqTitle: {
+    fontSize: '14px',
+    fontWeight: '700',
+    color: '#111827',
+  },
+  freqDiscount: {
+    fontSize: '11px',
+    fontWeight: '600',
+    color: '#16a34a',
+    marginTop: '2px',
+  },
+  summaryBox: {
+    backgroundColor: '#f9fafb',
+    borderRadius: '12px',
+    padding: '12px',
+    border: '1px solid #f3f4f6',
+  },
+  summaryRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    fontSize: '12px',
+    color: '#4b5563',
+    lineHeight: '1.6',
+  },
+  modalSubmitBtn: {
+    width: '100%',
+    padding: '14px 0',
+    backgroundColor: '#16a34a',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '14px',
+    fontSize: '14px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    transition: 'background-color 0.15s ease',
+    boxShadow: '0 4px 6px -1px rgba(22, 163, 74, 0.2)',
   },
 };

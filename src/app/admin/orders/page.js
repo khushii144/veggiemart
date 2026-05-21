@@ -36,8 +36,8 @@ export default function AdminOrders() {
         All Customer Orders
       </h1>
 
-      <div className="bg-white rounded-[2.5rem] border border-gray-50 shadow-sm overflow-hidden">
-        <table className="w-full text-left">
+      <div className="bg-white rounded-[2.5rem] border border-gray-50 shadow-sm overflow-x-auto">
+        <table className="w-full text-left min-w-[800px]">
           <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
               <th className="px-8 py-6 font-bold text-gray-600">Order ID / Date</th>

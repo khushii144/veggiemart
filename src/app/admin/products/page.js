@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react-hooks/set-state-in-effect */
 
 import { useCallback, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
@@ -12,13 +13,14 @@ const emptyForm = {
   discount: '0',
   description: '',
   image: '',
-  category: 'Vegetables',
+  categorySlug: '',
 };
 
 export default function AdminProducts() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
@@ -39,16 +41,35 @@ export default function AdminProducts() {
     }
   }, []);
 
+  const fetchCategories = useCallback(async () => {
+    try {
+      const res = await fetch('/api/categories', {
+        cache: 'no-store',
+        headers: { Accept: 'application/json' },
+      });
+      const data = await res.json();
+      const activeCategories = Array.isArray(data) ? data.filter((category) => category.isActive) : [];
+      setCategories(activeCategories);
+      setFormData((current) => ({
+        ...current,
+        categorySlug: current.categorySlug || activeCategories[0]?.slug || '',
+      }));
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
   useEffect(() => {
     if (status === 'loading') return;
 
     if (status === 'authenticated' && session?.user?.role === 'admin') {
       fetchProducts();
+      fetchCategories();
       return;
     }
 
     router.push('/');
-  }, [fetchProducts, router, session, status]);
+  }, [fetchCategories, fetchProducts, router, session, status]);
 
   const resetForm = () => {
     setEditingProductId(null);
@@ -57,6 +78,7 @@ export default function AdminProducts() {
 
   const openAddModal = () => {
     resetForm();
+    setFormData({ ...emptyForm, categorySlug: categories[0]?.slug || '' });
     setShowModal(true);
   };
 
@@ -68,7 +90,7 @@ export default function AdminProducts() {
       discount: String(product.discount ?? '0'),
       description: product.description || '',
       image: product.image || '',
-      category: product.category || 'Vegetables',
+      categorySlug: product.categorySlug || categories.find((category) => category.name === product.category)?.slug || '',
     });
     setShowModal(true);
   };
@@ -85,6 +107,7 @@ export default function AdminProducts() {
     try {
       const payload = {
         ...formData,
+        category: categories.find((category) => category.slug === formData.categorySlug)?.name || '',
         price: parseFloat(formData.price),
         discount: Math.min(100, Math.max(0, parseFloat(formData.discount) || 0)),
         ...(editingProductId && { _id: editingProductId }),
@@ -159,8 +182,8 @@ export default function AdminProducts() {
         </button>
       </div>
 
-      <div className="bg-white rounded-[2.5rem] border border-gray-50 shadow-sm overflow-hidden">
-        <table className="w-full text-left">
+      <div className="bg-white rounded-[2.5rem] border border-gray-50 shadow-sm overflow-x-auto">
+        <table className="w-full text-left min-w-[800px]">
           <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
               <th className="px-8 py-6 font-bold text-gray-600">Product</th>
@@ -248,12 +271,19 @@ export default function AdminProducts() {
                 />
                 <select
                   className="w-full p-4 bg-gray-50 border-none rounded-2xl outline-none"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  value={formData.categorySlug}
+                  onChange={(e) => setFormData({ ...formData, categorySlug: e.target.value })}
+                  required
                 >
-                  <option value="Vegetables">Vegetables</option>
-                  <option value="Greens">Greens</option>
-                  <option value="Fruits">Fruits</option>
+                  {categories.length === 0 ? (
+                    <option value="">Create a category first</option>
+                  ) : (
+                    categories.map((category) => (
+                      <option key={category._id} value={category.slug}>
+                        {category.name}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
 

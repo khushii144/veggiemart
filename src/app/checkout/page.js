@@ -60,7 +60,7 @@ export default function CheckoutPage() {
           <CheckCircle2 className="w-16 h-16 text-green-600" />
         </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Order Placed Successfully!</h1>
-        <p className="text-gray-500 mb-8 max-w-md">Thank you for shopping with VeggieMart. Your fresh vegetables are being packed and will reach you soon.</p>
+        <p className="text-gray-500 mb-8 max-w-md">Thank you for shopping with Organic Vatika. Your fresh vegetables are being packed and will reach you soon.</p>
         <p className="text-sm text-gray-400">Redirecting to order history...</p>
       </div>
     );

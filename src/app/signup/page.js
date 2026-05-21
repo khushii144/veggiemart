@@ -44,7 +44,7 @@ export default function SignupPage() {
             <UserPlus className="w-8 h-8 text-green-600" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
-          <p className="text-gray-500 mt-2">Join VeggieMart for fresh deliveries</p>
+          <p className="text-gray-500 mt-2">Join Organic Vatika for fresh deliveries</p>
         </div>
 
         {error && (

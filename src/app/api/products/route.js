@@ -1,5 +1,6 @@
 import connectDB from '@/lib/mongodb';
 import Product from '@/models/Product';
+import Category from '@/models/Category';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/route';
@@ -14,13 +15,44 @@ async function requireAdmin() {
   return session;
 }
 
+function slugify(value) {
+  return value
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+async function resolveCategory(data) {
+  const requestedSlug = data.categorySlug || slugify(data.category || '');
+  const requestedName = data.category?.trim();
+  const category = await Category.findOne({
+    $or: [
+      ...(requestedSlug ? [{ slug: requestedSlug }] : []),
+      ...(requestedName ? [{ name: requestedName }] : []),
+    ],
+  });
+
+  if (!category) {
+    return null;
+  }
+
+  return {
+    category: category.name,
+    categorySlug: category.slug,
+    categoryImage: category.image,
+  };
+}
+
 export async function GET() {
   try {
     await connectDB();
     const products = await Product.find({}).sort({ createdAt: -1 });
     return NextResponse.json(products);
   } catch (error) {
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ message: 'Internal Server Error', error: error.message }, { status: 500 });
   }
 }
 
@@ -33,7 +65,12 @@ export async function POST(req) {
 
     await connectDB();
     const data = await req.json();
-    const product = await Product.create({ ...data, isAdminAdded: true });
+    const categoryData = await resolveCategory(data);
+    if (!categoryData) {
+      return NextResponse.json({ message: 'Please select a valid category' }, { status: 400 });
+    }
+
+    const product = await Product.create({ ...data, ...categoryData, isAdminAdded: true });
     return NextResponse.json(product, { status: 201 });
   } catch (error) {
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
@@ -55,9 +92,14 @@ export async function PUT(req) {
       return NextResponse.json({ message: 'Product id is required' }, { status: 400 });
     }
 
+    const categoryData = await resolveCategory(data);
+    if (!categoryData) {
+      return NextResponse.json({ message: 'Please select a valid category' }, { status: 400 });
+    }
+
     const product = await Product.findOneAndUpdate(
       { _id: productId },
-      data,
+      { ...data, ...categoryData },
       {
         new: true,
         runValidators: true,
