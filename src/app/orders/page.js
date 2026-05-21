@@ -32,6 +32,7 @@ export default function OrdersPage() {
       setLoading(false);
     }
   };
+  
 
   if (loading) {
     return <div className="text-center py-20 animate-pulse">Loading orders...</div>;

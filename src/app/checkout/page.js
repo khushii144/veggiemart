@@ -13,6 +13,7 @@ export default function CheckoutPage() {
   const [success, setSuccess] = useState(false);
   const router = useRouter();
 
+
   useEffect(() => {
     if (status !== 'loading' && status === 'unauthenticated') {
       router.push('/login?callbackUrl=/checkout');
@@ -25,6 +26,7 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
+      
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
