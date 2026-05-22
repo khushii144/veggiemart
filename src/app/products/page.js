@@ -8,7 +8,7 @@ import { Search } from 'lucide-react';
 function ProductsContent() {
   const searchParams = useSearchParams();
   
-  // Read category from URL, default to 'All'
+  // Read will category from URL, default to 'All'
   const selectedCategory = searchParams.get('category') || 'All';
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
