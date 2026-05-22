@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -60,11 +61,11 @@ export default function AdminDashboard() {
   if (status === 'loading') return <div className="text-center py-20 text-gray-500">Loading dashboard...</div>;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500 lg:space-y-8">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
-            <LayoutDashboard className="w-8 h-8 text-green-600 dark:text-green-400" />
+          <h1 className="flex items-center gap-3 text-2xl font-extrabold text-gray-900 dark:text-white sm:text-3xl">
+            <LayoutDashboard className="h-7 w-7 text-green-600 dark:text-green-400 sm:h-8 sm:w-8" />
             Dashboard Overview
           </h1>
           <p className="text-gray-500 mt-1">Welcome back, {session?.user?.name || 'Admin'}!</p>
@@ -76,7 +77,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Top Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
         <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
           <div className="absolute -right-4 -top-4 w-24 h-24 bg-green-50 dark:bg-green-900/20 rounded-full group-hover:scale-150 transition-transform duration-500 ease-out" />
           <div className="relative">
@@ -135,7 +136,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Middle Section: Chart & Recent Orders */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
         <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">Revenue Analytics</h3>
@@ -170,7 +171,7 @@ export default function AdminDashboard() {
             </Link>
           </div>
           
-          <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-2">
+          <div className="flex flex-col gap-4">
             {recentOrders.length > 0 ? recentOrders.map((order) => (
               <div key={order._id} className="flex items-center justify-between p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition border border-transparent hover:border-gray-100 dark:hover:border-gray-600">
                 <div className="flex items-center gap-3">
@@ -200,7 +201,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Quick Links Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
         <Link href="/admin/products" className="group bg-gradient-to-br from-green-500 to-green-600 p-6 rounded-[2rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all relative overflow-hidden">
           <div className="absolute right-0 top-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-500" />
           <div className="relative z-10 flex flex-col h-full justify-between">

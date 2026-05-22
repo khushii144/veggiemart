@@ -335,7 +335,7 @@ const styles = {
     flexDirection: 'column',
     width:         '100%',
     maxWidth:      '245px',
-    fontFamily:    "'Inter', 'Segoe UI', sans-serif",
+    fontFamily:    "'Poppins', 'Segoe UI', sans-serif",
     boxShadow:     'none',
     transition:    'transform .2s ease',
   },
@@ -538,7 +538,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '16px',
-    fontFamily: "'Inter', sans-serif",
+    fontFamily: "'Poppins', 'Segoe UI', sans-serif",
   },
   modalClose: {
     position: 'absolute',

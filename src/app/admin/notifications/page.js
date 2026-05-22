@@ -1,8 +1,11 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Bell, Package, AlertTriangle, ShieldCheck, Check } from 'lucide-react';
+import AdminPagination from '@/components/AdminPagination';
+
+const ITEMS_PER_PAGE = 6;
 
 export default function NotificationsPage() {
   const { data: session, status } = useSession();
@@ -14,6 +17,12 @@ export default function NotificationsPage() {
     { id: 3, type: 'system', title: 'System Update', message: 'Scheduled maintenance will occur at 2 AM UTC.', time: '3 hours ago', read: true, icon: ShieldCheck, color: 'bg-gray-100 text-gray-600' },
     { id: 4, type: 'order', title: 'Order Delivered', message: 'Order #3910 has been successfully delivered.', time: '5 hours ago', read: true, icon: Package, color: 'bg-green-100 text-green-600' },
   ]);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const paginatedNotifications = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return notifications.slice(start, start + ITEMS_PER_PAGE);
+  }, [currentPage, notifications]);
 
   useEffect(() => {
     if (status === 'unauthenticated' || (status === 'authenticated' && session?.user?.role !== 'admin')) {
@@ -32,11 +41,11 @@ export default function NotificationsPage() {
   if (status === 'loading') return <div className="p-8 text-center text-gray-500">Loading notifications...</div>;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-4xl">
+    <div className="max-w-4xl space-y-6 animate-in fade-in duration-500 lg:space-y-8">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
-            <Bell className="w-8 h-8 text-yellow-500" />
+          <h1 className="flex items-center gap-3 text-2xl font-extrabold text-gray-900 dark:text-white sm:text-3xl">
+            <Bell className="h-7 w-7 text-yellow-500 sm:h-8 sm:w-8" />
             Notifications
           </h1>
           <p className="text-gray-500 mt-1">Real-time alerts and system updates.</p>
@@ -50,8 +59,8 @@ export default function NotificationsPage() {
         </button>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden divide-y divide-gray-50 dark:divide-gray-700/50">
-        {notifications.map((notif) => {
+      <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm divide-y divide-gray-50 dark:divide-gray-700/50 dark:border-gray-700 dark:bg-gray-800 sm:rounded-[2.5rem]">
+        {paginatedNotifications.map((notif) => {
           const Icon = notif.icon;
           return (
             <div 
@@ -79,6 +88,13 @@ export default function NotificationsPage() {
             </div>
           );
         })}
+        <AdminPagination
+          currentPage={currentPage}
+          itemName="notifications"
+          onPageChange={setCurrentPage}
+          pageSize={ITEMS_PER_PAGE}
+          totalItems={notifications.length}
+        />
       </div>
     </div>
   );

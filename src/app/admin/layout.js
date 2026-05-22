@@ -9,9 +9,9 @@ export default function AdminLayout({ children }) {
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
       <AdminSidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-      <div className="flex flex-col flex-1 w-full overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col">
         <AdminTopBar onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 w-full">
+        <main className="w-full min-w-0 flex-1 p-3 sm:p-4 lg:p-6">
           {children}
         </main>
       </div>

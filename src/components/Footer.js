@@ -6,6 +6,8 @@ import { Leaf, Mail, MapPin, Phone, Truck } from 'lucide-react';
 
 const shopLinks = [
   { href: '/', label: 'Home' },
+  { href: '/about', label: 'About' },
+  { href: '/contact', label: 'Contact' },
   { href: '/cart', label: 'Cart' },
   { href: '/orders', label: 'Orders' },
 ];
@@ -20,7 +22,7 @@ const helpLinks = [
 export default function Footer() {
   const pathname = usePathname();
 
-  if (pathname?.startsWith('/admin')) {
+  if (pathname?.startsWith('/admin') || pathname === '/login' || pathname === '/signup') {
     return null;
   }
 

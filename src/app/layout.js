@@ -1,11 +1,16 @@
-import { Inter } from 'next/font/google';
+import { Poppins } from 'next/font/google';
 import './globals.css';
 import Providers from '@/components/Providers';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import PageWrapper from '@/components/PageWrapper';
 
-const inter = Inter({ subsets: ['latin'] });
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-poppins',
+  display: 'swap',
+});
 
 export const metadata = {
   title: 'Organic Vatika | Fresh Vegetables Delivered',
@@ -30,7 +35,7 @@ export default function RootLayout({ children }) {
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
       </head>
-      <body className={`${inter.className} bg-gray-50 min-h-screen text-gray-900`} suppressHydrationWarning>
+      <body className={`${poppins.variable} font-sans bg-gray-50 min-h-screen text-gray-900`} suppressHydrationWarning>
         <Providers>
           <Navbar />
           <div className="flex min-h-screen flex-col">

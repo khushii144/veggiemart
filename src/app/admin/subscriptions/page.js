@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import AdminPagination from '@/components/AdminPagination';
 import { 
   Calendar, 
   Clock, 
@@ -22,6 +23,8 @@ import {
   Truck
 } from 'lucide-react';
 
+const ITEMS_PER_PAGE = 6;
+
 export default function AdminSubscriptionsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -35,6 +38,7 @@ export default function AdminSubscriptionsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [isRunningCron, setIsRunningCron] = useState(false);
   const [cronResult, setCronResult] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   async function fetchSubscriptions() {
     try {
@@ -199,6 +203,11 @@ export default function AdminSubscriptionsPage() {
     return matchesSearch && matchesVerification && matchesStatus;
   });
 
+  const paginatedSubscriptions = filteredSubscriptions.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
+
   if (status === 'loading' || loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
@@ -209,7 +218,7 @@ export default function AdminSubscriptionsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div className="flex items-center gap-4">
@@ -220,8 +229,8 @@ export default function AdminSubscriptionsPage() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-3xl font-extrabold text-gray-900 flex items-center gap-3">
-              <Calendar className="w-8 h-8 text-green-600" />
+            <h1 className="flex items-center gap-3 text-2xl font-extrabold text-gray-900 sm:text-3xl">
+              <Calendar className="h-7 w-7 text-green-600 sm:h-8 sm:w-8" />
               Manage Subscriptions
             </h1>
             <p className="text-gray-500 text-sm mt-1">Verify, approve, or reject customer wholesale subscriptions</p>
@@ -246,7 +255,7 @@ export default function AdminSubscriptionsPage() {
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
           <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Total Orders</span>
           <h3 className="text-2xl font-black text-gray-900 mt-2">{totalCount}</h3>
@@ -286,7 +295,7 @@ export default function AdminSubscriptionsPage() {
       )}
 
       {/* Search & Filters */}
-      <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="flex flex-col gap-4 rounded-3xl border border-gray-100 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between sm:p-6 sm:rounded-[2rem]">
         {/* Search input */}
         <div className="relative w-full md:w-80">
           <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
@@ -294,20 +303,26 @@ export default function AdminSubscriptionsPage() {
             type="text"
             placeholder="Search by customer, email, product..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
             className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 focus:border-green-500 focus:bg-white rounded-2xl text-sm text-gray-800 outline-none transition-all"
           />
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+        <div className="flex w-full flex-wrap items-center gap-3 md:w-auto lg:gap-4">
           <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
             <Filter className="w-3.5 h-3.5" /> Filter by:
           </div>
           
           <select 
             value={verificationFilter}
-            onChange={(e) => setVerificationFilter(e.target.value)}
+            onChange={(e) => {
+              setVerificationFilter(e.target.value);
+              setCurrentPage(1);
+            }}
             className="px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-700 outline-none cursor-pointer focus:border-green-500"
           >
             <option value="all">Verification: All</option>
@@ -318,7 +333,10 @@ export default function AdminSubscriptionsPage() {
 
           <select 
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setCurrentPage(1);
+            }}
             className="px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-700 outline-none cursor-pointer focus:border-green-500"
           >
             <option value="all">Status: All</option>
@@ -340,8 +358,9 @@ export default function AdminSubscriptionsPage() {
           <p className="text-gray-500 text-sm">No wholesale customer subscriptions match your current filters or query terms.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {filteredSubscriptions.map((sub) => {
+        <>
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-8">
+          {paginatedSubscriptions.map((sub) => {
             const product = sub.productId || {};
             const user = sub.userId || {};
             const basePrice = (product.price || 0) * sub.quantity;
@@ -459,7 +478,15 @@ export default function AdminSubscriptionsPage() {
               </div>
             );
           })}
-        </div>
+          </div>
+          <AdminPagination
+            currentPage={currentPage}
+            itemName="subscriptions"
+            onPageChange={setCurrentPage}
+            pageSize={ITEMS_PER_PAGE}
+            totalItems={filteredSubscriptions.length}
+          />
+        </>
       )}
     </div>
   );
