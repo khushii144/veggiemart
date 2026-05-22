@@ -1,10 +1,6 @@
 'use client';
-<<<<<<< HEAD
-import { useState, useEffect, useMemo } from 'react';
-=======
 export const dynamic = 'force-dynamic';
-import { useState, useEffect } from 'react';
->>>>>>> 02f19d15883a62fed77e45597c2f0b668055cf99
+import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Users, Search, MoreVertical, Mail, Calendar, Shield } from 'lucide-react';
