@@ -1,9 +1,5 @@
 'use client';
-<<<<<<< HEAD
 /* eslint-disable react-hooks/set-state-in-effect */
-=======
-export const dynamic = 'force-dynamic';
->>>>>>> 02f19d15883a62fed77e45597c2f0b668055cf99
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';

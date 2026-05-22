@@ -44,7 +44,6 @@ export default function LoginPage() {
   };
 
   return (
-<<<<<<< HEAD
     <div className="flex min-h-screen items-center justify-center overflow-hidden bg-[#f6faf5] px-4 py-5">
       <div className="grid w-full max-w-4xl overflow-hidden border border-gray-100 bg-white shadow-xl shadow-green-900/10 lg:max-h-[34rem] lg:grid-cols-[0.98fr_1.02fr]">
         <section className="relative hidden overflow-hidden bg-[#073c2a] lg:block">
@@ -59,61 +58,6 @@ export default function LoginPage() {
           <Link href="/" className="absolute left-6 top-6 z-10 inline-flex items-center gap-2">
             <Image src="/logo.PNG" alt="Organic Vatika" width={38} height={38} className="object-contain" />
             <span className="text-sm font-black text-white">Organic Vatika</span>
-=======
-    <div className="min-h-[70vh] flex items-center justify-center px-4">
-      <div className="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-green-100/50 border border-gray-50 w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex p-4 bg-green-50 rounded-2xl mb-4">
-            <LogIn className="w-8 h-8 text-green-600" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
-          <p className="text-gray-500 mt-2">Enter your credentials to access your account</p>
-        </div>
-
-        {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm mb-6 border border-red-100 animate-shake">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="relative">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="email"
-              placeholder="Email Address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-green-500 transition-all outline-none"
-              required
-            />
-          </div>
-          <div className="relative">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-green-500 transition-all outline-none"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-green-100 disabled:opacity-70 flex items-center justify-center gap-2"
-          >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In'}
-          </button>
-        </form>
-
-        <p className="text-center mt-8 text-gray-600">
-          Don&apos;t have an account?{' '}
-          <Link href="/signup" className="text-green-600 font-bold hover:underline">
-            Sign Up
->>>>>>> 02f19d15883a62fed77e45597c2f0b668055cf99
           </Link>
           <div className="absolute inset-x-0 bottom-0 p-7 text-white">
             <div className="inline-flex items-center gap-2 border border-white/20 bg-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-widest backdrop-blur">

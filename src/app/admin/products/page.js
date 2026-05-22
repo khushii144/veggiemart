@@ -199,7 +199,6 @@ export default function AdminProducts() {
         </button>
       </div>
 
-<<<<<<< HEAD
       <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm sm:rounded-[2rem]">
         <div className="space-y-4 p-4 lg:hidden">
           {paginatedProducts.map((product) => (
@@ -219,47 +218,6 @@ export default function AdminProducts() {
                   </span>
                   {product.discount > 0 && (
                     <span className="rounded-full bg-red-50 px-3 py-1 text-[11px] font-black text-red-600">
-=======
-      <div className="bg-white rounded-[2.5rem] border border-gray-50 shadow-sm overflow-x-auto">
-        <table className="w-full text-left min-w-[900px]">
-          <thead className="bg-gray-50 border-b border-gray-100">
-            <tr>
-              <th className="px-8 py-6 font-bold text-gray-600">Product</th>
-              <th className="px-8 py-6 font-bold text-gray-600">Category</th>
-              <th className="px-8 py-6 font-bold text-gray-600">Price</th>
-              <th className="px-8 py-6 font-bold text-gray-600">Stock</th>
-              <th className="px-8 py-6 font-bold text-gray-600">Discount</th>
-              <th className="px-8 py-6 font-bold text-gray-600">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {products.map((product) => (
-              <tr key={product._id} className="hover:bg-gray-50/50 transition-colors">
-                <td className="px-8 py-6">
-                  <div className="flex items-center gap-4">
-                    <div className="relative w-12 h-12 rounded-xl overflow-hidden shadow-sm bg-gray-50">
-                      <Image src={product.image} alt={product.name} fill sizes="48px" className="object-cover" />
-                    </div>
-                    <span className="font-bold text-gray-900">{product.name}</span>
-                  </div>
-                </td>
-                <td className="px-8 py-6">
-                  <span className="px-3 py-1 bg-green-50 text-green-600 rounded-full text-xs font-bold uppercase tracking-wider">
-                    {product.category}
-                  </span>
-                </td>
-                <td className="px-8 py-6 font-bold text-gray-900">Rs. {Number(product.price).toFixed(2)}</td>
-                <td className="px-8 py-6">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                    Number(product.stock) > 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                  }`}>
-                    {Number(product.stock) > 0 ? `${product.stock} in stock` : 'Out of stock'}
-                  </span>
-                </td>
-                <td className="px-8 py-6">
-                  {product.discount > 0 ? (
-                    <span className="px-3 py-1 bg-red-50 text-red-600 rounded-full text-xs font-bold">
->>>>>>> 02f19d15883a62fed77e45597c2f0b668055cf99
                       {product.discount}% OFF
                     </span>
                   )}
