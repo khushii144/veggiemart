@@ -45,14 +45,14 @@ Go to: **Project Settings → Environment Variables**
 
 Add these variables for **Production**:
 ```
-MONGODB_URI = mongodb://khushi2026y_db_user:PQMXUXPOieoY3tHy@ac-aphiojm-shard-00-00.hixh4tz.mongodb.net:27017,ac-aphiojm-shard-00-01.hixh4tz.mongodb.net:27017,ac-aphiojm-shard-00-02.hixh4tz.mongodb.net:27017/veggiemart?ssl=true&replicaSet=atlas-p3kfkr-shard-0&authSource=admin&retryWrites=true&w=majority
+MONGODB_URI = <your MongoDB connection string>
 
 NEXTAUTH_SECRET = [Generate new random secret with: openssl rand -base64 32]
 
 NEXTAUTH_URL = https://veggiemart.vercel.app
 # OR your custom domain if configured
 
-CRON_SECRET = veggiemart_cron_secret_2026
+CRON_SECRET = <your cron secret>
 ```
 
 ### Step 2: Trigger Redeploy

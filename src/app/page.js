@@ -73,7 +73,7 @@ export default function Home() {
       setCurrentSlide((prev) => (prev + 1) % heroImages.length);
     }, 4000);
     return () => clearInterval(timer);
-  }, []);
+  }, [heroImages.length]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -186,7 +186,7 @@ export default function Home() {
               Our Strengths
             </h2>
             <p className="text-gray-500 text-sm sm:text-base leading-relaxed">
-              Discover what makes us different and why we're the best choice for your organic needs.
+              Discover what makes us different and why we&apos;re the best choice for your organic needs.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
@@ -407,7 +407,7 @@ export default function Home() {
                   ))}
                 </div>
                 <p className="text-gray-700 italic mb-8 relative z-10 leading-relaxed text-sm">
-                  "{testimonial.content}"
+                  &quot;{testimonial.content}&quot;
                 </p>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-[#4a7c59] flex items-center justify-center text-white font-bold text-lg shadow-sm">

@@ -14,7 +14,7 @@ export default function CartPage() {
           <ShoppingBag className="w-16 h-16 text-green-600" />
         </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Your cart is empty</h1>
-        <p className="text-gray-500 mb-8 max-w-md">Looks like you haven't added any vegetables to your cart yet. Let's find some fresh picks!</p>
+        <p className="text-gray-500 mb-8 max-w-md">Looks like you haven&apos;t added any vegetables to your cart yet. Let&apos;s find some fresh picks!</p>
         <Link
           href="/"
           className="bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-4 rounded-2xl transition-all shadow-lg shadow-green-100"
