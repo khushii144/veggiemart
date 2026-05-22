@@ -1,9 +1,9 @@
-'use client';
-import { useState } from 'react';
-import AdminSidebar from '@/components/AdminSidebar';
-import AdminTopBar from '@/components/AdminTopBar';
+export const dynamic = 'force-dynamic';
+
+import AdminLayoutClient from './AdminLayoutClient';
 
 export default function AdminLayout({ children }) {
+<<<<<<< HEAD
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -17,4 +17,7 @@ export default function AdminLayout({ children }) {
       </div>
     </div>
   );
+=======
+  return <AdminLayoutClient>{children}</AdminLayoutClient>;
+>>>>>>> 02f19d15883a62fed77e45597c2f0b668055cf99
 }

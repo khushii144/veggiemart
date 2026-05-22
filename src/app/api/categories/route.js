@@ -38,16 +38,13 @@ async function requireAdmin() {
 }
 
 async function ensureBaseCategories() {
-  const count = await Category.countDocuments();
-  if (count > 0) return;
-
   const initialCategories = starterCategories
     .filter((category) => category.id !== 'All' && !HIDDEN_CATEGORY_SLUGS.has(slugify(category.id || category.name)))
     .map((category) => ({
       name: category.name,
       slug: slugify(category.id || category.name),
       description: category.desc || '',
-            image: normalizeImage(category.image),
+      image: normalizeImage(category.image),
       isActive: true,
     }));
 
@@ -55,7 +52,15 @@ async function ensureBaseCategories() {
     ...initialCategories.map((category) => ({
       updateOne: {
         filter: { slug: category.slug },
-        update: { $setOnInsert: category },
+        update: {
+          $set: { image: category.image },
+          $setOnInsert: {
+            name: category.name,
+            slug: category.slug,
+            description: category.description,
+            isActive: category.isActive,
+          },
+        },
         upsert: true,
       },
     })),

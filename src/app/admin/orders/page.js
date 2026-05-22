@@ -1,6 +1,11 @@
 'use client';
+<<<<<<< HEAD
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect, useMemo, useCallback } from 'react';
+=======
+export const dynamic = 'force-dynamic';
+import { useState, useEffect } from 'react';
+>>>>>>> 02f19d15883a62fed77e45597c2f0b668055cf99
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { ClipboardList, Clock, MapPin, User } from 'lucide-react';

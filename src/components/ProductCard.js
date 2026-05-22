@@ -18,6 +18,7 @@ const quantityOptions = {
   onion:       ['500 g', '1 kg', '2 kg'],
   potato:      ['500 g', '1 kg', '2 kg'],
   cauliflower: ['1 Piece', '2 Piece'],
+  arhar:       ['500 g', '1 kg', '2 kg'],
   chilli:      ['100 g', '250 g'],
   ginger:      ['100 g', '250 g'],
 };
@@ -37,6 +38,7 @@ function getVegetableType(name) {
   if (v.includes('onion'))                              return 'onion';
   if (v.includes('potato'))                             return 'potato';
   if (v.includes('cauliflower'))                        return 'cauliflower';
+  if (v.includes('arhar') || v.includes('toor dal'))    return 'arhar';
   if (v.includes('chilli')   || v.includes('chili'))   return 'chilli';
   if (v.includes('ginger'))                             return 'ginger';
   return null;
@@ -58,12 +60,14 @@ function calcPrices(price, discountPct) {
 }
 
 /* ── component ───────────────────────────────────────────────── */
-export default function ProductCard({ product, imageOverride }) {
+export default function ProductCard({ product }) {
   const { addToCart } = useCart();
-  const [imgSrc, setImgSrc]   = useState(imageOverride || product.image || fallbackImage);
-  const options               = getQuantityOptions(product.name);
+  const [imgSrc, setImgSrc]   = useState(product.image || fallbackImage);
+  const options               = getQuantityOptions(product.name || '');
   const [qty, setQty]         = useState(options[0]);
   const { yourPrice, mrp, saving, pct } = calcPrices(product.price, product.discount);
+  const stockCount = Number(product.stock) || 0;
+  const inStock = stockCount > 0;
 
   // Subscription states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -76,8 +80,8 @@ export default function ProductCard({ product, imageOverride }) {
   }, [subFreq]);
 
   useEffect(() => {
-    setImgSrc(imageOverride || product.image || fallbackImage);
-  }, [imageOverride, product.image]);
+    setImgSrc(product.image || fallbackImage);
+  }, [product.image]);
 
   const handleSubscribe = async () => {
     try {
@@ -149,7 +153,7 @@ export default function ProductCard({ product, imageOverride }) {
         {/* name */}
         <Link href={`/product/${product._id}`} style={{ textDecoration: 'none', display: 'block' }}>
           <h3 style={styles.name}>
-            {product.name.length > 30 ? product.name.slice(0, 30) + '…' : product.name}
+            {(product.name || '').length > 30 ? product.name.slice(0, 30) + '...' : product.name}
           </h3>
         </Link>
 
@@ -164,7 +168,10 @@ export default function ProductCard({ product, imageOverride }) {
               <option key={o} value={o}>{o}</option>
             ))}
           </select>
-          <span style={styles.greenDot} />
+          <span style={inStock ? styles.greenDot : styles.grayDot} />
+        </div>
+        <div style={inStock ? styles.stockIn : styles.stockOut}>
+          {inStock ? `${stockCount} in stock` : 'Out of stock'}
         </div>
 
         {/* price row */}
@@ -192,17 +199,19 @@ export default function ProductCard({ product, imageOverride }) {
         {/* add to cart button */}
         <button
           onClick={() => addToCart({ ...product, qty })}
-          style={styles.cartBtn}
+          disabled={!inStock}
+          style={{ ...styles.cartBtn, ...(!inStock ? styles.disabledBtn : {}) }}
           onMouseEnter={(e) => (e.currentTarget.style.background = '#15803d')}
           onMouseLeave={(e) => (e.currentTarget.style.background = '#16a34a')}
         >
-          Add to Cart
+          {inStock ? 'Add to Cart' : 'Out of Stock'}
         </button>
 
         {/* subscribe & save button */}
         <button
           onClick={() => setIsModalOpen(true)}
-          style={styles.subBtn}
+          disabled={!inStock}
+          style={{ ...styles.subBtn, ...(!inStock ? styles.disabledSubBtn : {}) }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = '#f4fbf7';
             e.currentTarget.style.color = '#15803d';
@@ -334,8 +343,13 @@ const styles = {
     display:       'flex',
     flexDirection: 'column',
     width:         '100%',
+<<<<<<< HEAD
     maxWidth:      '245px',
     fontFamily:    "'Poppins', 'Segoe UI', sans-serif",
+=======
+    maxWidth:      '220px',
+    fontFamily:    "'Inter', 'Segoe UI', sans-serif",
+>>>>>>> 02f19d15883a62fed77e45597c2f0b668055cf99
     boxShadow:     'none',
     transition:    'transform .2s ease',
   },
@@ -361,12 +375,12 @@ const styles = {
     alignItems:      'center',
     justifyContent:  'center',
     background:      '#fff',
-    padding:         '24px 20px 10px',
-    height:          '165px',
+    padding:         '18px 16px 8px',
+    height:          '140px',
   },
   image: {
-    maxHeight:  '145px',
-    maxWidth:   '165px',
+    maxHeight:  '122px',
+    maxWidth:   '145px',
     objectFit: 'contain',
   },
 
@@ -374,12 +388,12 @@ const styles = {
   body: {
     display:       'flex',
     flexDirection: 'column',
-    padding:       '10px 14px 0',
-    gap:           '6px',
+    padding:       '8px 12px 0',
+    gap:           '5px',
   },
 
   name: {
-    fontSize:   '14px',
+    fontSize:   '13px',
     fontWeight: '700',
     color:      '#1a1a1a',
     margin:     '0',
@@ -395,8 +409,8 @@ const styles = {
   },
   qtySelect: {
     flex:          1,
-    padding:       '5px 8px',
-    fontSize:      '13px',
+    padding:       '4px 7px',
+    fontSize:      '12px',
     border:        '1px solid #d1d5db',
     borderRadius:  '4px',
     background:    '#fff',
@@ -413,6 +427,24 @@ const styles = {
     flexShrink:   0,
     border:       '2px solid #16a34a',
   },
+  grayDot: {
+    width:        '12px',
+    height:       '12px',
+    borderRadius: '50%',
+    background:   '#d1d5db',
+    flexShrink:   0,
+    border:       '2px solid #9ca3af',
+  },
+  stockIn: {
+    fontSize: '11px',
+    fontWeight: '700',
+    color: '#15803d',
+  },
+  stockOut: {
+    fontSize: '11px',
+    fontWeight: '700',
+    color: '#b91c1c',
+  },
 
   /* price */
   priceRow: {
@@ -422,7 +454,7 @@ const styles = {
     marginTop:  '2px',
   },
   yourPrice: {
-    fontSize:   '18px',
+    fontSize:   '16px',
     fontWeight: '800',
     color:      '#111827',
   },
@@ -485,31 +517,40 @@ const styles = {
 
   /* add to cart */
   cartBtn: {
-    width:        'calc(100% + 28px)',
-    marginLeft:   '-14px',
-    padding:      '13px 0',
+    width:        'calc(100% + 24px)',
+    marginLeft:   '-12px',
+    padding:      '11px 0',
     background:   '#16a34a',
     color:        '#ffffff',
     border:       'none',
-    fontSize:     '14px',
+    fontSize:     '13px',
     fontWeight:   '700',
     cursor:       'pointer',
     letterSpacing: '.3px',
     transition:   'background .15s ease',
   },
   subBtn: {
-    width:        'calc(100% + 28px)',
-    marginLeft:   '-14px',
-    padding:      '12px 0',
+    width:        'calc(100% + 24px)',
+    marginLeft:   '-12px',
+    padding:      '10px 0',
     background:   'transparent',
     color:        '#16a34a',
     border:       'none',
     borderTop:    '1px solid #f3f4f6',
-    fontSize:     '13px',
+    fontSize:     '12px',
     fontWeight:   '700',
     cursor:       'pointer',
     letterSpacing: '.3px',
     transition:   'all .15s ease',
+  },
+  disabledBtn: {
+    background: '#9ca3af',
+    cursor: 'not-allowed',
+  },
+  disabledSubBtn: {
+    color: '#9ca3af',
+    cursor: 'not-allowed',
+    background: '#f9fafb',
   },
   
   /* Modal Styles */

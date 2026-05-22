@@ -1,5 +1,5 @@
 "use client";
-/* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/exhaustive-deps */
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
@@ -10,6 +10,7 @@ import { useCart } from '@/context/CartContext';
 import { Search, ShoppingCart, User, LogOut, ShieldCheck, X, Bell, Clock, Package, ShieldAlert, CheckCircle2, XCircle, Menu, ChevronDown } from 'lucide-react';
 
 const allProductsCategory = { _id: 'all', name: 'All Products', slug: 'All' };
+const alwaysVisibleCategorySlugs = new Set(['organic-daals']);
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -158,26 +159,45 @@ export default function Navbar() {
   useEffect(() => {
     const fetchProductCategories = async () => {
       try {
-        const res = await fetch('/api/categories', {
-          method: 'GET',
-          cache: 'no-store',
-          headers: { Accept: 'application/json' },
-        });
+        const [categoriesRes, productsRes] = await Promise.all([
+          fetch('/api/categories', {
+            method: 'GET',
+            cache: 'no-store',
+            headers: { Accept: 'application/json' },
+          }),
+          fetch('/api/products', {
+            method: 'GET',
+            cache: 'no-store',
+            headers: { Accept: 'application/json' },
+          }),
+        ]);
 
-        if (!res.ok) return;
+        if (!categoriesRes.ok || !productsRes.ok) return;
 
-        const categories = await res.json();
-        if (!Array.isArray(categories)) return;
+        const [categories, products] = await Promise.all([
+          categoriesRes.json(),
+          productsRes.json(),
+        ]);
+
+        if (!Array.isArray(categories) || !Array.isArray(products)) return;
+
+        const categoriesWithProducts = categories.filter((category) =>
+          category.isActive &&
+          (alwaysVisibleCategorySlugs.has(category.slug) ||
+            products.some((product) =>
+              product.categorySlug?.toLowerCase() === category.slug?.toLowerCase() ||
+              product.category?.toLowerCase() === category.name?.toLowerCase()
+            )
+          )
+        );
 
         setNavCategories([
           allProductsCategory,
-          ...categories
-            .filter((category) => category.isActive)
-            .map((category) => ({
-              _id: category._id,
-              name: category.name,
-              slug: category.slug,
-            })),
+          ...categoriesWithProducts.map((category) => ({
+            _id: category._id,
+            name: category.name,
+            slug: category.slug,
+          })),
         ]);
       } catch (err) {
         console.error('Failed to fetch product categories:', err);
@@ -185,6 +205,13 @@ export default function Navbar() {
     };
 
     fetchProductCategories();
+    const refresh = setInterval(fetchProductCategories, 10000);
+    window.addEventListener('focus', fetchProductCategories);
+
+    return () => {
+      clearInterval(refresh);
+      window.removeEventListener('focus', fetchProductCategories);
+    };
   }, []);
 
   useEffect(() => {

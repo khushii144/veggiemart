@@ -23,7 +23,7 @@ Your VeggieMart application has been fully fixed and is ready for Vercel deploym
 
 ```
 Name: MONGODB_URI
-Value: mongodb://khushi2026y_db_user:PQMXUXPOieoY3tHy@ac-aphiojm-shard-00-00.hixh4tz.mongodb.net:27017,ac-aphiojm-shard-00-01.hixh4tz.mongodb.net:27017,ac-aphiojm-shard-00-02.hixh4tz.mongodb.net:27017/veggiemart?ssl=true&replicaSet=atlas-p3kfkr-shard-0&authSource=admin&retryWrites=true&w=majority
+Value: <your MongoDB connection string>
 Environments: Production
 
 Name: NEXTAUTH_SECRET
@@ -36,7 +36,7 @@ Value: https://veggiemart.vercel.app
 Environments: Production
 
 Name: CRON_SECRET
-Value: veggiemart_cron_secret_2026
+Value: <your cron secret>
 Environments: Production
 ```
 

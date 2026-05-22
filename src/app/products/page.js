@@ -14,10 +14,12 @@ function ProductsContent() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setError('');
         const [productsRes, categoriesRes] = await Promise.all([
           fetch('/api/products', {
             method: 'GET',
@@ -41,11 +43,19 @@ function ProductsContent() {
         setCategories(Array.isArray(categoriesData) ? categoriesData.filter((category) => category.isActive) : []);
       } catch (err) {
         console.error('Failed to fetch products:', err);
+        setError('Products are not available right now. Please try again shortly.');
       } finally {
         setLoading(false);
       }
     };
     fetchData();
+    const refresh = setInterval(fetchData, 10000);
+    window.addEventListener('focus', fetchData);
+
+    return () => {
+      clearInterval(refresh);
+      window.removeEventListener('focus', fetchData);
+    };
   }, []);
 
   const selectedCategoryData = categories.find((category) =>
@@ -106,16 +116,20 @@ function ProductsContent() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 justify-items-center gap-4 md:grid-cols-3 xl:grid-cols-5">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="bg-white rounded-[2rem] h-[340px] animate-pulse border border-gray-100 shadow-sm" />
+              <div key={i} className="h-[310px] w-full max-w-[220px] animate-pulse rounded-xl border border-gray-100 bg-white shadow-sm" />
             ))}
           </div>
+        ) : error ? (
+          <div className="rounded-3xl border border-red-100 bg-red-50 px-6 py-12 text-center text-red-700">
+            {error}
+          </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 justify-items-center gap-4 md:grid-cols-3 xl:grid-cols-5">
             {filtered.length > 0 ? (
               filtered.map(product => (
-                <ProductCard key={product._id} product={product} imageOverride="/images/product-card-default.jpg" />
+                <ProductCard key={product._id} product={product} />
               ))
             ) : (
               <div className="col-span-full rounded-3xl border border-dashed border-gray-200 bg-white px-6 py-16 text-center shadow-sm">

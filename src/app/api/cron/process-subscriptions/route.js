@@ -22,11 +22,20 @@ export async function GET(req) {
     // Security: validate cron secret
     // -----------------------------------------------------------------------
     const cronSecret = process.env.CRON_SECRET;
-    const incoming = req.headers.get('x-cron-secret');
+    const incomingAuth = req.headers.get('authorization');
+    const incomingLegacy = req.headers.get('x-cron-secret');
+
+    // Vercel Cron sends `Authorization: Bearer <CRON_SECRET>`.
+    // Keep the legacy x-cron-secret header for external schedulers.
+    const expectedAuth = `Bearer ${cronSecret}`;
+    const isValid =
+      !cronSecret ||
+      incomingAuth === expectedAuth ||
+      incomingLegacy === cronSecret;
 
     // If CRON_SECRET is set in env, enforce it. If not set, allow open access
     // (useful for local development — set CRON_SECRET in production always).
-    if (cronSecret && incoming !== cronSecret) {
+    if (!isValid) {
       return NextResponse.json({ message: 'Forbidden: invalid cron secret.' }, { status: 403 });
     }
 

@@ -9,7 +9,7 @@ const ProductSchema = new mongoose.Schema({
   categorySlug: { type: String, default: '' },
   categoryImage: { type: String, default: '' },
   discount: { type: Number, default: 0, min: 0, max: 100 },
-  stock: { type: Number, default: 0 },
+  stock: { type: Number, default: 50 },
   isAdminAdded: { type: Boolean, default: false },
 }, { timestamps: true });
 
