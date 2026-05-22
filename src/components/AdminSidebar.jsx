@@ -47,9 +47,9 @@ export default function AdminSidebar({ isOpen, setIsOpen }) {
 
       {/* Sidebar */}
       <aside 
-        className={`fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out flex flex-col
+        className={`fixed inset-y-0 left-0 z-30 w-72 max-w-[82vw] bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out flex flex-col
           ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
-          lg:translate-x-0 lg:static lg:z-20`}
+          lg:sticky lg:top-0 lg:z-20 lg:h-screen lg:w-64 lg:translate-x-0`}
       >
         <div className="flex items-center justify-between p-4 border-b">
           <Link href="/" className="flex items-center gap-3">
@@ -63,7 +63,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }) {
             <X className="w-6 h-6" />
           </button>
         </div>
-        <nav className="flex-1 overflow-y-auto mt-4 px-2 space-y-1">
+        <nav className="flex-1 px-2 py-4 space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
@@ -73,7 +73,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }) {
                 key={item.name}
                 href={item.href}
                 onClick={() => setIsOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors ${activeClass}`}
+                className={`flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeClass}`}
               >
                 <Icon className={`w-5 h-5 ${active ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`} />
                 <span>{item.name}</span>

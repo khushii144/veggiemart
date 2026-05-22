@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-poppins), "Segoe UI", Arial, sans-serif;
+  --font-serif: var(--font-poppins), "Segoe UI", Arial, sans-serif;
 }
 
 :root {
@@ -43,4 +44,13 @@ body {
 
 .animate-fadeIn {
   animation: fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); opacity: 0.96; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.animate-slideInRight {
+  animation: slide-in-right 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

@@ -343,8 +343,13 @@ const styles = {
     display:       'flex',
     flexDirection: 'column',
     width:         '100%',
+<<<<<<< HEAD
+    maxWidth:      '245px',
+    fontFamily:    "'Poppins', 'Segoe UI', sans-serif",
+=======
     maxWidth:      '220px',
     fontFamily:    "'Inter', 'Segoe UI', sans-serif",
+>>>>>>> 02f19d15883a62fed77e45597c2f0b668055cf99
     boxShadow:     'none',
     transition:    'transform .2s ease',
   },
@@ -574,7 +579,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '16px',
-    fontFamily: "'Inter', sans-serif",
+    fontFamily: "'Poppins', 'Segoe UI', sans-serif",
   },
   modalClose: {
     position: 'absolute',

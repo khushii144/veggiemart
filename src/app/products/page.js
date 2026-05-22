@@ -10,6 +10,7 @@ function ProductsContent() {
   
   // Read will category from URL, default to 'All'
   const selectedCategory = searchParams.get('category') || 'All';
+  const searchQuery = searchParams.get('q')?.trim() || '';
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,19 +63,34 @@ function ProductsContent() {
     category.name?.toLowerCase() === selectedCategory.toLowerCase()
   );
 
+  const hasCategoryFilter = selectedCategory !== 'All';
+  const normalizedSearch = searchQuery.toLowerCase();
+
   const selectedCategoryLabel =
-    selectedCategory === 'All'
+    !hasCategoryFilter
       ? 'All Products'
       : selectedCategoryData?.name || selectedCategory;
 
   const filtered = products.filter((product) => {
-    if (selectedCategory === 'All') return true;
-    return (
+    const matchesCategory = !hasCategoryFilter || (
       product.categorySlug?.toLowerCase() === selectedCategory.toLowerCase() ||
       product.category?.toLowerCase() === selectedCategory.toLowerCase() ||
       (selectedCategoryData && product.category?.toLowerCase() === selectedCategoryData.name.toLowerCase())
     );
+
+    const matchesSearch = !normalizedSearch || [
+      product.name,
+      product.category,
+      product.categorySlug,
+      product.description,
+    ].some((value) => value?.toLowerCase().includes(normalizedSearch));
+
+    return matchesCategory && matchesSearch;
   });
+
+  const pageTitle = searchQuery
+    ? `Search results for "${searchQuery}"`
+    : selectedCategoryLabel;
 
   return (
     <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -83,15 +99,17 @@ function ProductsContent() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h1 className="text-3xl font-serif text-[#1e3b2b] font-bold">
-                {selectedCategoryLabel}
+                {pageTitle}
               </h1>
               <p className="text-sm text-gray-500 mt-1 font-medium">
                 {filtered.length} {filtered.length === 1 ? 'item' : 'items'} found
               </p>
             </div>
-            {selectedCategory !== 'All' && (
+            {(hasCategoryFilter || searchQuery) && (
               <p className="max-w-md text-sm font-medium text-gray-500">
-                Showing products from the {selectedCategoryLabel} category.
+                {hasCategoryFilter
+                  ? `Showing products from the ${selectedCategoryLabel} category${searchQuery ? ` matching "${searchQuery}"` : ''}.`
+                  : 'Showing matching products from all categories.'}
               </p>
             )}
           </div>
@@ -120,7 +138,9 @@ function ProductsContent() {
                 </div>
                 <h3 className="text-xl font-bold text-gray-900">No products found</h3>
                 <p className="mt-2 text-sm text-gray-500 max-w-sm mx-auto">
-                  We currently do not have any products in the {selectedCategoryLabel} category. Try selecting another category from the Products menu.
+                  {searchQuery
+                    ? `No products match "${searchQuery}". Try another product name or category.`
+                    : `We currently do not have any products in the ${selectedCategoryLabel} category. Try selecting another category from the Products menu.`}
                 </p>
               </div>
             )}

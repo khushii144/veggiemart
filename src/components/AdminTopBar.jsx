@@ -21,8 +21,8 @@ export default function AdminTopBar({ onMenuClick }) {
   const breadcrumbs = pathname.split('/').filter(Boolean);
 
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between px-4 md:px-6 py-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 transition-colors">
-      <div className="flex items-center space-x-2 md:space-x-4">
+    <header className="sticky top-0 z-20 flex min-w-0 items-center justify-between gap-2 px-3 py-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 transition-colors sm:px-4 lg:px-6">
+      <div className="flex min-w-0 items-center space-x-2 md:space-x-4">
         <button
           onClick={onMenuClick}
           className="lg:hidden p-1 rounded-md text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition"
@@ -30,7 +30,7 @@ export default function AdminTopBar({ onMenuClick }) {
         >
           <Menu className="w-6 h-6" />
         </button>
-        <nav className="hidden sm:flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
+        <nav className="hidden min-w-0 items-center space-x-2 truncate text-sm text-gray-600 dark:text-gray-300 sm:flex">
           {breadcrumbs.map((seg, idx) => {
             const href = '/' + breadcrumbs.slice(0, idx + 1).join('/') + (idx === breadcrumbs.length - 1 ? '' : '/');
             const isLast = idx === breadcrumbs.length - 1;
@@ -43,13 +43,13 @@ export default function AdminTopBar({ onMenuClick }) {
           })}
         </nav>
       </div>
-      <form onSubmit={handleSearch} className="flex items-center gap-2">
+      <form onSubmit={handleSearch} className="flex shrink-0 items-center gap-2">
         <div className="relative hidden sm:block">
           <Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="search"
             placeholder="Search..."
-            className="pl-8 pr-2 py-1 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+            className="w-40 rounded-md border border-gray-300 py-1 pl-8 pr-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 md:w-56"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -58,7 +58,7 @@ export default function AdminTopBar({ onMenuClick }) {
           <Search className="w-5 h-5 text-gray-600 dark:text-gray-300" />
         </button>
       </form>
-      <div className="flex items-center space-x-2 md:space-x-3">
+      <div className="flex shrink-0 items-center space-x-2 md:space-x-3">
         <button
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
           className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition"

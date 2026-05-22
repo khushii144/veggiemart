@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Edit2, Loader2, Plus, Search, Tags, Trash2, X } from 'lucide-react';
+import AdminPagination from '@/components/AdminPagination';
 
 const emptyForm = {
   name: '',
@@ -14,6 +15,8 @@ const emptyForm = {
   image: '',
   isActive: true,
 };
+
+const ITEMS_PER_PAGE = 10;
 
 function slugify(value) {
   return value
@@ -37,6 +40,7 @@ export default function AdminCategories() {
   const [formData, setFormData] = useState(emptyForm);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const fetchCategories = useCallback(async () => {
     setLoading(true);
@@ -81,6 +85,11 @@ export default function AdminCategories() {
       return matchesQuery && matchesStatus;
     });
   }, [categories, searchTerm, statusFilter]);
+
+  const paginatedCategories = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredCategories.slice(start, start + ITEMS_PER_PAGE);
+  }, [currentPage, filteredCategories]);
 
   const resetForm = () => {
     setEditingCategoryId(null);
@@ -210,14 +219,20 @@ export default function AdminCategories() {
           <input
             type="search"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
             placeholder="Search categories..."
             className="w-full rounded-2xl border border-gray-100 bg-gray-50 py-3 pl-11 pr-4 text-sm font-medium outline-none transition focus:border-green-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
           />
         </div>
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setCurrentPage(1);
+          }}
           className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold outline-none transition focus:border-green-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
         >
           <option value="all">All Status</option>
@@ -227,7 +242,51 @@ export default function AdminCategories() {
       </div>
 
       <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-800">
-        <div className="overflow-x-auto">
+        <div className="space-y-4 p-4 lg:hidden">
+          {paginatedCategories.map((category) => (
+            <div
+              key={category._id}
+              className="grid grid-cols-[76px_minmax(0,1fr)_auto] items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+            >
+              <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
+                <Image src={category.image || '/images/categories/all.jpg'} alt={category.name} fill sizes="64px" className="object-cover" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="truncate text-base font-bold text-gray-950 dark:text-white">{category.name}</h2>
+                <p className="mt-1 truncate text-sm font-semibold text-gray-500 dark:text-gray-300">{category.slug}</p>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className={`rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-wide ${category.isActive ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-300'}`}>
+                    {category.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                  <span className="line-clamp-1 text-xs font-medium text-gray-400">
+                    {category.description || 'No description'}
+                  </span>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => openEditModal(category)}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-orange-600 transition hover:bg-orange-50 dark:border-gray-700 dark:bg-gray-900"
+                  aria-label={`Edit ${category.name}`}
+                >
+                  <Edit2 className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(category)}
+                  disabled={deletingId === category._id}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label={`Delete ${category.name}`}
+                >
+                  {deletingId === category._id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="hidden overflow-x-auto lg:block">
           <table className="w-full min-w-[760px] text-left">
             <thead className="border-b border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/60">
               <tr>
@@ -238,7 +297,7 @@ export default function AdminCategories() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
-              {filteredCategories.map((category) => (
+              {paginatedCategories.map((category) => (
                 <tr key={category._id} className="transition hover:bg-gray-50/80 dark:hover:bg-gray-900/40">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
@@ -290,6 +349,13 @@ export default function AdminCategories() {
             <p className="mt-1 text-sm text-gray-500">Try a different search or add a new category.</p>
           </div>
         )}
+        <AdminPagination
+          currentPage={currentPage}
+          itemName="categories"
+          onPageChange={setCurrentPage}
+          pageSize={ITEMS_PER_PAGE}
+          totalItems={filteredCategories.length}
+        />
       </div>
 
       {showModal && (

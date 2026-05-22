@@ -4,9 +4,14 @@ import { usePathname } from 'next/navigation';
 export default function PageWrapper({ children }) {
   const pathname = usePathname();
   const isHome = pathname === '/';
+  const isAuthPage = pathname === '/login' || pathname === '/signup';
 
   if (isHome) {
     return <div className="w-full">{children}</div>;
+  }
+
+  if (isAuthPage) {
+    return <div className="w-full flex-1">{children}</div>;
   }
 
   return (
