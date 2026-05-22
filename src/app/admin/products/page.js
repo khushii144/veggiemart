@@ -11,6 +11,7 @@ const emptyForm = {
   name: '',
   price: '',
   discount: '0',
+  stock: '50',
   description: '',
   image: '',
   categorySlug: '',
@@ -88,6 +89,7 @@ export default function AdminProducts() {
       name: product.name || '',
       price: String(product.price ?? ''),
       discount: String(product.discount ?? '0'),
+      stock: String(product.stock ?? '0'),
       description: product.description || '',
       image: product.image || '',
       categorySlug: product.categorySlug || categories.find((category) => category.name === product.category)?.slug || '',
@@ -110,6 +112,7 @@ export default function AdminProducts() {
         category: categories.find((category) => category.slug === formData.categorySlug)?.name || '',
         price: parseFloat(formData.price),
         discount: Math.min(100, Math.max(0, parseFloat(formData.discount) || 0)),
+        stock: Math.max(1, parseInt(formData.stock, 10) || 50),
         ...(editingProductId && { _id: editingProductId }),
       };
 
@@ -183,12 +186,13 @@ export default function AdminProducts() {
       </div>
 
       <div className="bg-white rounded-[2.5rem] border border-gray-50 shadow-sm overflow-x-auto">
-        <table className="w-full text-left min-w-[800px]">
+        <table className="w-full text-left min-w-[900px]">
           <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
               <th className="px-8 py-6 font-bold text-gray-600">Product</th>
               <th className="px-8 py-6 font-bold text-gray-600">Category</th>
               <th className="px-8 py-6 font-bold text-gray-600">Price</th>
+              <th className="px-8 py-6 font-bold text-gray-600">Stock</th>
               <th className="px-8 py-6 font-bold text-gray-600">Discount</th>
               <th className="px-8 py-6 font-bold text-gray-600">Actions</th>
             </tr>
@@ -210,6 +214,13 @@ export default function AdminProducts() {
                   </span>
                 </td>
                 <td className="px-8 py-6 font-bold text-gray-900">Rs. {Number(product.price).toFixed(2)}</td>
+                <td className="px-8 py-6">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    Number(product.stock) > 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                  }`}>
+                    {Number(product.stock) > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                  </span>
+                </td>
                 <td className="px-8 py-6">
                   {product.discount > 0 ? (
                     <span className="px-3 py-1 bg-red-50 text-red-600 rounded-full text-xs font-bold">
@@ -286,6 +297,16 @@ export default function AdminProducts() {
                   )}
                 </select>
               </div>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                placeholder="Stock quantity"
+                className="w-full p-4 bg-gray-50 border-none rounded-2xl outline-none"
+                value={formData.stock}
+                onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                required
+              />
 
               {/* ── Offer / Discount section ── */}
               <div className="rounded-2xl border border-dashed border-red-200 bg-red-50/40 p-4">

@@ -26,6 +26,7 @@ const quantityOptions = {
   onion:       ['500 g', '1 kg', '2 kg'],
   potato:      ['500 g', '1 kg', '2 kg'],
   cauliflower: ['1 Piece', '2 Piece'],
+  arhar:       ['500 g', '1 kg', '2 kg'],
   chilli:      ['100 g', '250 g'],
   ginger:      ['100 g', '250 g'],
 };
@@ -44,6 +45,7 @@ function getVegetableType(name) {
   if (v.includes('onion'))                              return 'onion';
   if (v.includes('potato'))                             return 'potato';
   if (v.includes('cauliflower'))                        return 'cauliflower';
+  if (v.includes('arhar') || v.includes('toor dal'))    return 'arhar';
   if (v.includes('chilli')   || v.includes('chili'))   return 'chilli';
   if (v.includes('ginger'))                             return 'ginger';
   return null;
@@ -105,8 +107,14 @@ export default function ProductDetailPage() {
         const allRes = await fetch('/api/products');
         if (allRes.ok) {
           const allData = await allRes.json();
-          // Filter out current product, take items in same category or just random ones
-          const filtered = (Array.isArray(allData) ? allData : []).filter(p => p._id !== params.id).slice(0, 4);
+          const filtered = (Array.isArray(allData) ? allData : [])
+            .filter((p) => p._id !== params.id)
+            .sort((a, b) => {
+              const aMatches = a.categorySlug === data.categorySlug || a.category === data.category;
+              const bMatches = b.categorySlug === data.categorySlug || b.category === data.category;
+              return Number(bMatches) - Number(aMatches);
+            })
+            .slice(0, 4);
           setRelatedProducts(filtered);
         }
       } catch (err) {
@@ -142,6 +150,8 @@ export default function ProductDetailPage() {
 
   const { yourPrice, mrp, saving, pct } = calcPrices(product.price, product.discount);
   const options = getQuantityOptions(product.name);
+  const stockCount = Number(product.stock) || 0;
+  const inStock = stockCount > 0;
 
   const handleSubscribe = async () => {
     try {
@@ -248,6 +258,11 @@ export default function ProductDetailPage() {
             <span className="text-xs font-black text-green-600 uppercase tracking-widest block">
               {product.category || 'Fresh Organic Vegetables'}
             </span>
+            <span className={`inline-flex w-fit px-3 py-1 text-[10px] font-black uppercase tracking-widest ${
+              inStock ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+            }`}>
+              {inStock ? `${stockCount} in stock` : 'Out of stock'}
+            </span>
 
             {/* Product Title */}
             <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 uppercase tracking-tight">
@@ -316,16 +331,18 @@ export default function ProductDetailPage() {
               {/* Add to Cart button */}
               <button
                 onClick={() => addToCart({ ...product, qty })}
-                className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-extrabold text-xs uppercase tracking-widest py-4 transition-all duration-200 shadow-sm"
+                disabled={!inStock}
+                className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-extrabold text-xs uppercase tracking-widest py-4 transition-all duration-200 shadow-sm disabled:cursor-not-allowed disabled:bg-gray-400"
               >
                 <ShoppingCart className="w-4 h-4" />
-                Add to Cart
+                {inStock ? 'Add to Cart' : 'Out of Stock'}
               </button>
 
               {/* Subscribe & Save button */}
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="flex items-center justify-center gap-2 border-2 border-green-600 text-green-600 bg-white hover:bg-green-50 font-extrabold text-xs uppercase tracking-widest py-4 transition-all duration-200"
+                disabled={!inStock}
+                className="flex items-center justify-center gap-2 border-2 border-green-600 text-green-600 bg-white hover:bg-green-50 font-extrabold text-xs uppercase tracking-widest py-4 transition-all duration-200 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400 disabled:hover:bg-white"
               >
                 <Calendar className="w-4 h-4" />
                 Subscribe & Save
@@ -354,9 +371,9 @@ export default function ProductDetailPage() {
             </h2>
           </div>
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 justify-items-center gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {relatedProducts.map((p) => (
-              <ProductCard key={p._id} product={p} imageOverride="/images/product-card-default.jpg" />
+              <ProductCard key={p._id} product={p} />
             ))}
           </div>
         </div>

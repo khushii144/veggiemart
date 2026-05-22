@@ -2,18 +2,18 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import ProductCard from '@/components/ProductCard';
 import BlogCard from '@/components/BlogCard';
-import { Leaf, Search, ShieldCheck, Truck, Droplets, UserCheck, Star, Quote, Clock, MapPin, CalendarRange, CheckCircle2, ArrowRight } from 'lucide-react';
+import { useCart } from '@/context/CartContext';
+import { Leaf, ShieldCheck, Truck, Droplets, UserCheck, Star, Quote, Clock, MapPin, CalendarRange, CheckCircle2, ArrowRight, PackageSearch } from 'lucide-react';
 import { blogs } from '@/lib/blogs';
 
 export default function Home() {
+  const { addToCart } = useCart();
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [categories, setCategories] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState('All');
   const [activeFaq, setActiveFaq] = useState(null);
+  const alwaysVisibleCategorySlugs = new Set(['organic-daals']);
 
   const faqs = [
     { question: 'What makes your Desi Ghee different from store-bought brands?', answer: 'Our Desi Ghee is made using the traditional Bilona method from grass-fed cows. It contains no preservatives or artificial flavors, ensuring maximum purity and nutrition.' },
@@ -29,45 +29,6 @@ export default function Home() {
     '/images/banner4.jpg',
   ];
 
-  const categories = [
-    { 
-      id: 'All',
-      name: 'All Products',
-      desc: 'Explore our complete organic collection',
-      image: '/images/categories/all.jpg',
-    },
-    {
-      id: 'Vegetables',
-      name: 'Vegetables',
-      desc: 'Crisp & fresh everyday veggies',
-      image: '/images/categories/vegetables.jpg',
-    },
-    {
-      id: 'Fruits',
-      name: 'Fruits',
-      desc: 'Sweet, juicy, farm-picked fruits',
-      image: '/images/categories/fruits.jpg',
-    },
-    {
-      id: 'Dairy',
-      name: 'Dairy',
-      desc: 'Pure milk, cheese & farm dairy',
-      image: '/images/categories/dairy.jpg',
-    },
-    {
-      id: 'Herbs',
-      name: 'Herbs',
-      desc: 'Aromatic & medicinal fresh herbs',
-      image: '/images/categories/herbs.jpg',
-    },
-    {
-      id: 'Seeds',
-      name: 'Seeds',
-      desc: 'Premium quality planting seeds',
-      image: '/images/categories/seeds.jpg',
-    },
-  ];
-
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroImages.length);
@@ -76,54 +37,55 @@ export default function Home() {
   }, [heroImages.length]);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchStorefrontData = async () => {
       try {
-        const res = await fetch('/api/products');
-        const data = await res.json();
-        setProducts(Array.isArray(data) ? data : []);
+        const [productsRes, categoriesRes] = await Promise.all([
+          fetch('/api/products', { cache: 'no-store', headers: { Accept: 'application/json' } }),
+          fetch('/api/categories', { cache: 'no-store', headers: { Accept: 'application/json' } }),
+        ]);
+        const [productsData, categoriesData] = await Promise.all([
+          productsRes.json(),
+          categoriesRes.json(),
+        ]);
+        setProducts(Array.isArray(productsData) ? productsData : []);
+        setCategories(Array.isArray(categoriesData) ? categoriesData.filter((category) => category.isActive) : []);
       } catch (error) {
-        console.error('Failed to fetch products:', error);
-      } finally {
-        setLoading(false);
+        console.error('Failed to fetch storefront products:', error);
       }
     };
 
-    fetchProducts();
-  }, []);
-
-  useEffect(() => {
-    const readSearchTerm = () => {
-      if (typeof window === 'undefined') return;
-      setSearchTerm(new URLSearchParams(window.location.search).get('q') || '');
-    };
-
-    const handleSearch = (event) => {
-      setSearchTerm(event.detail || '');
-    };
-
-    readSearchTerm();
-    window.addEventListener('popstate', readSearchTerm);
-    window.addEventListener('veggiemart:search', handleSearch);
+    fetchStorefrontData();
+    const refresh = setInterval(fetchStorefrontData, 10000);
+    window.addEventListener('focus', fetchStorefrontData);
 
     return () => {
-      window.removeEventListener('popstate', readSearchTerm);
-      window.removeEventListener('veggiemart:search', handleSearch);
+      clearInterval(refresh);
+      window.removeEventListener('focus', fetchStorefrontData);
     };
   }, []);
 
-  const normalizedSearch = searchTerm.trim().toLowerCase();
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = normalizedSearch
-      ? product.name?.toLowerCase().includes(normalizedSearch)
-      : true;
-      
-    // Handle category match - case insensitive and flexible
-    const matchesCategory = selectedCategory === 'All' 
-      ? true 
-      : product.category?.toLowerCase().includes(selectedCategory.toLowerCase());
+  const categoriesWithProducts = categories.filter((category) =>
+    alwaysVisibleCategorySlugs.has(category.slug) ||
+    products.some((product) =>
+      product.categorySlug?.toLowerCase() === category.slug?.toLowerCase() ||
+      product.category?.toLowerCase() === category.name?.toLowerCase()
+    )
+  );
+  const categoryShowcase = [
+    { label: 'Herbs', aliases: ['herbs', 'herb'] },
+    { label: 'Fruits', aliases: ['fruits', 'fruit'] },
+    { label: 'Seeds', aliases: ['seeds', 'seed'] },
+    { label: 'Milk', aliases: ['dairy', 'milk'] },
+    { label: 'Organic Daals', aliases: ['organic-daals', 'organic daals', 'daal', 'dal'] },
+  ];
+  const mostLovedProducts = categoryShowcase
+    .map((group) => products.find((product) => {
+      const category = product.category?.toLowerCase() || '';
+      const slug = product.categorySlug?.toLowerCase() || '';
 
-    return matchesSearch && matchesCategory;
-  });
+      return group.aliases.some((alias) => category.includes(alias) || slug.includes(alias));
+    }))
+    .filter(Boolean);
 
   return (
     <div className="w-full flex flex-col">
@@ -162,12 +124,12 @@ export default function Home() {
               From naturally grown vegetables to farm-fresh fruits, bring home wholesome nutrition, authentic taste, and the goodness of chemical-free farming.
             </p>
             <div className="flex flex-wrap gap-4">
-              <button 
-                onClick={() => document.getElementById('product-grid')?.scrollIntoView({ behavior: 'smooth' })}
+              <Link
+                href="/products"
                 className="rounded-full bg-[#4a7c59] px-8 py-3.5 text-sm font-bold text-white transition-all hover:bg-[#386044] shadow-md"
               >
                 Shop Now
-              </button>
+              </Link>
               <Link href="/subscriptions" className="rounded-full border border-white/40 bg-white/10 backdrop-blur-sm px-8 py-3.5 text-sm font-bold text-white transition-all hover:bg-white/20">
                 Subscribe Now
               </Link>
@@ -177,7 +139,7 @@ export default function Home() {
       </section>
 
       {/* Main Home Page Sections Centered Container */}
-      <div className="max-w-[90rem] w-full mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-16">
+      <div className="max-w-[90rem] w-full mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-14">
         
         {/* Our Strengths Section */}
         <section className="space-y-10 pt-4 pb-8">
@@ -210,7 +172,7 @@ export default function Home() {
         </section>
         
         {/* Organic Categories Section */}
-        <section className="space-y-10">
+        <section className="space-y-8">
           <div className="text-center max-w-2xl mx-auto space-y-4">
             <h2 className="text-3xl font-serif text-[#1e3b2b] sm:text-4xl font-bold">
               Shop by Category
@@ -221,18 +183,13 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 pt-2">
-            {categories.map((cat, i) => {
-              const isActive = selectedCategory === cat.id;
+          <div className="grid grid-cols-1 gap-4 pt-2 sm:grid-cols-2 lg:grid-cols-3">
+            {categoriesWithProducts.length > 0 ? categoriesWithProducts.map((cat) => {
               return (
                 <Link
-                  key={i}
-                  href={`/products?category=${encodeURIComponent(cat.id)}`}
-                  className={`group relative overflow-hidden rounded-2xl aspect-square text-left shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 focus:outline-none ${
-                    isActive
-                      ? 'ring-4 ring-[#4a7c59] ring-offset-2 shadow-[#4a7c59]/30'
-                      : ''
-                  }`}
+                  key={cat._id || cat.slug}
+                  href={`/products?category=${encodeURIComponent(cat.slug || cat.name)}`}
+                  className="group relative overflow-hidden rounded-xl aspect-[4/3] text-left shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1 focus:outline-none"
                   style={{ background: '#e8f5e9' }}
                 >
                   {/* Background Image */}
@@ -245,28 +202,27 @@ export default function Home() {
                   {/* Gradient overlay – stronger at bottom */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent transition-opacity duration-300 group-hover:from-black/90" />
 
-                  {/* Active badge */}
-                  {isActive && (
-                    <span className="absolute top-3 right-3 z-10 bg-[#4a7c59] text-white text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full shadow">
-                      Selected
-                    </span>
-                  )}
-
                   {/* Content */}
-                  <div className="absolute inset-0 z-10 flex flex-col justify-end p-4 sm:p-5">
-                    <h3 className="text-white font-bold text-base sm:text-lg leading-tight mb-1 drop-shadow">
+                  <div className="absolute inset-0 z-10 flex flex-col justify-end p-3 sm:p-4">
+                    <h3 className="text-white font-bold text-sm sm:text-base leading-tight mb-1 drop-shadow">
                       {cat.name}
                     </h3>
-                    <p className="text-gray-300 text-[11px] sm:text-xs leading-snug mb-3 font-light opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      {cat.desc}
+                    <p className="text-gray-300 text-[10px] sm:text-[11px] leading-snug mb-2 font-light opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      {cat.description || 'Explore fresh products added from admin.'}
                     </p>
-                    <div className="flex items-center gap-1.5 text-[#a4d4b4] text-xs font-semibold opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300">
-                      Explore <ArrowRight className="w-3.5 h-3.5" />
+                    <div className="flex items-center gap-1.5 text-[#a4d4b4] text-[11px] font-semibold opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300">
+                      Explore <ArrowRight className="w-3 h-3" />
                     </div>
                   </div>
                 </Link>
               );
-            })}
+            }) : (
+              <div className="col-span-full rounded-3xl border border-dashed border-gray-200 bg-white px-6 py-12 text-center">
+                <PackageSearch className="mx-auto mb-3 h-8 w-8 text-green-600" />
+                <p className="font-bold text-gray-900">No categories available</p>
+                <p className="mt-1 text-sm text-gray-500">Add categories in the admin panel to show them here.</p>
+              </div>
+            )}
           </div>
         </section>
 
@@ -283,6 +239,79 @@ export default function Home() {
             </Link>
           </div>
         </section>
+
+        {mostLovedProducts.length > 0 && (
+          <section className="space-y-8 pt-4">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-gray-950 sm:text-4xl">
+                Most Loved Products
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-2 justify-items-center gap-4 md:grid-cols-3 xl:grid-cols-5">
+              {mostLovedProducts.map((product) => {
+                const inStock = Number(product.stock) > 0;
+                const discount = Number(product.discount) || 0;
+                const price = Number(product.price) || 0;
+                const mrp = discount > 0 ? Math.round(price / (1 - discount / 100)) : price;
+
+                return (
+                  <div key={product._id} className="relative flex min-h-[330px] w-full max-w-[220px] flex-col bg-white px-3 pb-3 text-center">
+                    {discount > 0 && (
+                      <span className="absolute left-3 top-0 z-10 rounded-sm bg-green-600 px-2 py-1 text-xs font-bold text-white">
+                        -{discount}%
+                      </span>
+                    )}
+                    <Link href={`/product/${product._id}`} className="block">
+                      <div className="flex h-[170px] items-center justify-center bg-white px-2 pt-2">
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="max-h-[150px] w-full object-contain"
+                        />
+                      </div>
+                    </Link>
+                    <div className="flex flex-1 flex-col items-center">
+                      <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.12em] text-gray-800">
+                        {product.category || 'Organic Products'}
+                      </p>
+                      <Link href={`/product/${product._id}`} className="block">
+                        <h3 className="line-clamp-2 min-h-[38px] text-[14px] font-bold leading-snug text-gray-800">
+                          {product.name}
+                        </h3>
+                      </Link>
+                      <div className="mt-1 flex items-center justify-center gap-0.5 text-[#f4a51c]">
+                        {[...Array(5)].map((_, index) => (
+                          <Star key={index} className="h-3.5 w-3.5 fill-current" />
+                        ))}
+                      </div>
+                      <p className="mt-1 min-h-[20px] text-[12px] font-medium text-gray-950">
+                        ₹{price.toFixed(2)}
+                        {mrp > price && (
+                          <>
+                            <span> – </span>
+                            <span className="line-through">₹{mrp.toFixed(2)}</span>
+                          </>
+                        )}
+                        <span className="ml-1 text-[10px] font-normal text-gray-700">
+                          (Inclusive of all taxes).
+                        </span>
+                      </p>
+                      <button
+                        type="button"
+                        disabled={!inStock}
+                        onClick={() => addToCart({ ...product, qty: 'default' })}
+                        className="mt-auto inline-flex h-9 w-full items-center justify-center rounded-[4px] bg-[#35b34a] px-3 text-xs font-extrabold text-white transition hover:bg-[#26993a] disabled:cursor-not-allowed disabled:bg-gray-400"
+                      >
+                        {inStock ? 'Select options' : 'Out of Stock'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* Subscription Plans Section */}
         <section className="space-y-8 pt-8">
