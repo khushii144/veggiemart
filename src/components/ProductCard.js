@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 const fallbackImage = '/images/product-card-default.jpg';
 
-/* ── quantity options per vegetable type ─────────────────────── */
+/* ── quantity options per vegetables type ─────────────────────── */
 const quantityOptions = {
   cabbage:     ['400-500 g', '800 g-1 kg'],
   tomato:      ['500 g', '1 kg', '2 kg'],
