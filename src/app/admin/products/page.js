@@ -1,30 +1,42 @@
 'use client';
+export const dynamic = 'force-dynamic';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Edit2, Loader2, Package, Plus, Trash2 } from 'lucide-react';
+import AdminPagination from '@/components/AdminPagination';
 
 const emptyForm = {
   name: '',
   price: '',
   discount: '0',
+  stock: '50',
   description: '',
   image: '',
-  category: 'Vegetables',
+  categorySlug: '',
 };
+
+const ITEMS_PER_PAGE = 10;
 
 export default function AdminProducts() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingProductId, setEditingProductId] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return products.slice(start, start + ITEMS_PER_PAGE);
+  }, [currentPage, products]);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -39,16 +51,35 @@ export default function AdminProducts() {
     }
   }, []);
 
+  const fetchCategories = useCallback(async () => {
+    try {
+      const res = await fetch('/api/categories', {
+        cache: 'no-store',
+        headers: { Accept: 'application/json' },
+      });
+      const data = await res.json();
+      const activeCategories = Array.isArray(data) ? data.filter((category) => category.isActive) : [];
+      setCategories(activeCategories);
+      setFormData((current) => ({
+        ...current,
+        categorySlug: current.categorySlug || activeCategories[0]?.slug || '',
+      }));
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
   useEffect(() => {
     if (status === 'loading') return;
 
     if (status === 'authenticated' && session?.user?.role === 'admin') {
       fetchProducts();
+      fetchCategories();
       return;
     }
 
     router.push('/');
-  }, [fetchProducts, router, session, status]);
+  }, [fetchCategories, fetchProducts, router, session, status]);
 
   const resetForm = () => {
     setEditingProductId(null);
@@ -57,6 +88,7 @@ export default function AdminProducts() {
 
   const openAddModal = () => {
     resetForm();
+    setFormData({ ...emptyForm, categorySlug: categories[0]?.slug || '' });
     setShowModal(true);
   };
 
@@ -66,9 +98,10 @@ export default function AdminProducts() {
       name: product.name || '',
       price: String(product.price ?? ''),
       discount: String(product.discount ?? '0'),
+      stock: String(product.stock ?? '0'),
       description: product.description || '',
       image: product.image || '',
-      category: product.category || 'Vegetables',
+      categorySlug: product.categorySlug || categories.find((category) => category.name === product.category)?.slug || '',
     });
     setShowModal(true);
   };
@@ -85,8 +118,10 @@ export default function AdminProducts() {
     try {
       const payload = {
         ...formData,
+        category: categories.find((category) => category.slug === formData.categorySlug)?.name || '',
         price: parseFloat(formData.price),
         discount: Math.min(100, Math.max(0, parseFloat(formData.discount) || 0)),
+        stock: Math.max(1, parseInt(formData.stock, 10) || 50),
         ...(editingProductId && { _id: editingProductId }),
       };
 
@@ -131,6 +166,11 @@ export default function AdminProducts() {
       }
 
       setProducts((currentProducts) => currentProducts.filter((item) => item._id !== product._id));
+      setCurrentPage((page) => {
+        const nextTotal = products.length - 1;
+        const nextTotalPages = Math.max(1, Math.ceil(nextTotal / ITEMS_PER_PAGE));
+        return Math.min(page, nextTotalPages);
+      });
     } catch (error) {
       console.error(error);
       alert('Failed to delete product');
@@ -144,28 +184,50 @@ export default function AdminProducts() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <Package className="w-8 h-8 text-green-600" />
+    <div className="space-y-6 lg:space-y-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="flex items-center gap-3 text-2xl font-bold text-gray-900 sm:text-3xl">
+          <Package className="h-7 w-7 text-green-600 sm:h-8 sm:w-8" />
           Product Management
         </h1>
         <button
           onClick={openAddModal}
-          className="bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-3 rounded-2xl flex items-center gap-2 transition-all shadow-lg shadow-green-100"
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-green-100 transition-all hover:bg-green-700 sm:px-6"
         >
           <Plus className="w-5 h-5" />
           Add Product
         </button>
       </div>
 
-      <div className="bg-white rounded-[2.5rem] border border-gray-50 shadow-sm overflow-hidden">
-        <table className="w-full text-left">
+<<<<<<< HEAD
+      <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm sm:rounded-[2rem]">
+        <div className="space-y-4 p-4 lg:hidden">
+          {paginatedProducts.map((product) => (
+            <div
+              key={product._id}
+              className="grid grid-cols-[76px_minmax(0,1fr)_auto] items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+            >
+              <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-gray-100 bg-gray-50">
+                <Image src={product.image} alt={product.name} fill sizes="64px" className="object-cover" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="truncate text-base font-bold text-gray-950">{product.name}</h2>
+                <p className="mt-2 text-lg font-black text-gray-950">Rs. {Number(product.price).toFixed(2)}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-green-50 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-green-700">
+                    {product.category}
+                  </span>
+                  {product.discount > 0 && (
+                    <span className="rounded-full bg-red-50 px-3 py-1 text-[11px] font-black text-red-600">
+=======
+      <div className="bg-white rounded-[2.5rem] border border-gray-50 shadow-sm overflow-x-auto">
+        <table className="w-full text-left min-w-[900px]">
           <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
               <th className="px-8 py-6 font-bold text-gray-600">Product</th>
               <th className="px-8 py-6 font-bold text-gray-600">Category</th>
               <th className="px-8 py-6 font-bold text-gray-600">Price</th>
+              <th className="px-8 py-6 font-bold text-gray-600">Stock</th>
               <th className="px-8 py-6 font-bold text-gray-600">Discount</th>
               <th className="px-8 py-6 font-bold text-gray-600">Actions</th>
             </tr>
@@ -188,39 +250,114 @@ export default function AdminProducts() {
                 </td>
                 <td className="px-8 py-6 font-bold text-gray-900">Rs. {Number(product.price).toFixed(2)}</td>
                 <td className="px-8 py-6">
-                  {product.discount > 0 ? (
-                    <span className="px-3 py-1 bg-red-50 text-red-600 rounded-full text-xs font-bold">
-                      {product.discount}% OFF
-                    </span>
-                  ) : (
-                    <span className="text-gray-400 text-xs">No offer</span>
-                  )}
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    Number(product.stock) > 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                  }`}>
+                    {Number(product.stock) > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                  </span>
                 </td>
                 <td className="px-8 py-6">
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => openEditModal(product)}
-                      className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
-                      aria-label={`Edit ${product.name}`}
-                    >
-                      <Edit2 className="w-5 h-5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(product)}
-                      disabled={deletingId === product._id}
-                      className="p-2 text-gray-400 hover:text-red-500 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                      aria-label={`Delete ${product.name}`}
-                    >
-                      {deletingId === product._id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </td>
+                  {product.discount > 0 ? (
+                    <span className="px-3 py-1 bg-red-50 text-red-600 rounded-full text-xs font-bold">
+>>>>>>> 02f19d15883a62fed77e45597c2f0b668055cf99
+                      {product.discount}% OFF
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => openEditModal(product)}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-orange-600 transition hover:bg-orange-50"
+                  aria-label={`Edit ${product.name}`}
+                >
+                  <Edit2 className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(product)}
+                  disabled={deletingId === product._id}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label={`Delete ${product.name}`}
+                >
+                  {deletingId === product._id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="hidden overflow-x-auto lg:block">
+          <table className="w-full text-left min-w-[800px]">
+            <thead className="bg-gray-50 border-b border-gray-100">
+              <tr>
+                <th className="px-8 py-6 font-bold text-gray-600">Product</th>
+                <th className="px-8 py-6 font-bold text-gray-600">Category</th>
+                <th className="px-8 py-6 font-bold text-gray-600">Price</th>
+                <th className="px-8 py-6 font-bold text-gray-600">Discount</th>
+                <th className="px-8 py-6 font-bold text-gray-600">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {paginatedProducts.map((product) => (
+                <tr key={product._id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-8 py-6">
+                    <div className="flex items-center gap-4">
+                      <div className="relative w-12 h-12 rounded-xl overflow-hidden shadow-sm bg-gray-50">
+                        <Image src={product.image} alt={product.name} fill sizes="48px" className="object-cover" />
+                      </div>
+                      <span className="font-bold text-gray-900">{product.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-8 py-6">
+                    <span className="px-3 py-1 bg-green-50 text-green-600 rounded-full text-xs font-bold uppercase tracking-wider">
+                      {product.category}
+                    </span>
+                  </td>
+                  <td className="px-8 py-6 font-bold text-gray-900">Rs. {Number(product.price).toFixed(2)}</td>
+                  <td className="px-8 py-6">
+                    {product.discount > 0 ? (
+                      <span className="px-3 py-1 bg-red-50 text-red-600 rounded-full text-xs font-bold">
+                        {product.discount}% OFF
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 text-xs">No offer</span>
+                    )}
+                  </td>
+                  <td className="px-8 py-6">
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(product)}
+                        className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
+                        aria-label={`Edit ${product.name}`}
+                      >
+                        <Edit2 className="w-5 h-5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(product)}
+                        disabled={deletingId === product._id}
+                        className="p-2 text-gray-400 hover:text-red-500 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                        aria-label={`Delete ${product.name}`}
+                      >
+                        {deletingId === product._id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <AdminPagination
+          currentPage={currentPage}
+          itemName="products"
+          onPageChange={setCurrentPage}
+          pageSize={ITEMS_PER_PAGE}
+          totalItems={products.length}
+        />
       </div>
 
       {showModal && (
@@ -248,14 +385,31 @@ export default function AdminProducts() {
                 />
                 <select
                   className="w-full p-4 bg-gray-50 border-none rounded-2xl outline-none"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  value={formData.categorySlug}
+                  onChange={(e) => setFormData({ ...formData, categorySlug: e.target.value })}
+                  required
                 >
-                  <option value="Vegetables">Vegetables</option>
-                  <option value="Greens">Greens</option>
-                  <option value="Fruits">Fruits</option>
+                  {categories.length === 0 ? (
+                    <option value="">Create a category first</option>
+                  ) : (
+                    categories.map((category) => (
+                      <option key={category._id} value={category.slug}>
+                        {category.name}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                placeholder="Stock quantity"
+                className="w-full p-4 bg-gray-50 border-none rounded-2xl outline-none"
+                value={formData.stock}
+                onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                required
+              />
 
               {/* ── Offer / Discount section ── */}
               <div className="rounded-2xl border border-dashed border-red-200 bg-red-50/40 p-4">

@@ -1,11 +1,15 @@
+"use client";
+import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Leaf, Mail, MapPin, Phone, Truck } from 'lucide-react';
 
 const shopLinks = [
   { href: '/', label: 'Home' },
+  { href: '/about', label: 'About' },
+  { href: '/contact', label: 'Contact' },
   { href: '/cart', label: 'Cart' },
   { href: '/orders', label: 'Orders' },
-  { href: '/checkout', label: 'Checkout' },
 ];
 
 const helpLinks = [
@@ -16,71 +20,93 @@ const helpLinks = [
 ];
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  if (pathname?.startsWith('/admin') || pathname === '/login' || pathname === '/signup') {
+    return null;
+  }
+
   return (
-    <footer className="mt-16 border-t border-gray-200 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <footer className="mt-16 bg-[#073c2a] text-white border-t border-green-800/20">
+      <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid gap-10 md:grid-cols-[1.4fr_0.8fr_0.8fr_1fr]">
-          <div>
-            <Link href="/" className="inline-flex items-center text-2xl font-bold text-green-600 tracking-tight">
-              Veggie<span className="text-orange-500">Mart</span>
-            </Link>
-            <p className="mt-4 max-w-sm text-sm leading-6 text-gray-500">
-              Fresh, organic, and locally grown vegetables delivered quickly from trusted farms to your kitchen.
+          
+          {/* Logo & Slogan Column */}
+          <div className="space-y-4">
+              <Link href="/" className="group inline-flex items-center gap-2.5">
+                <Image src="/logo.PNG" alt="Organic Vatika" width={44} height={44} priority className="object-contain" />
+              </Link>
+            <p className="max-w-sm text-xs sm:text-sm leading-relaxed text-green-100/80 font-medium">
+              Fresh, organic, and locally grown vegetables delivered quickly from trusted farms to your kitchen. Healthy living starts here.
             </p>
-            <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-green-50 px-4 py-2 text-sm font-semibold text-green-700">
-              <Leaf className="h-4 w-4" />
+            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 px-4 py-2 text-xs font-black uppercase tracking-widest text-white">
+              <Leaf className="h-3.5 w-3.5 fill-white/10" />
               100% fresh picks daily
             </div>
           </div>
 
+          {/* Shop Navigation Links */}
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-wide text-gray-900">Shop</h2>
-            <div className="mt-4 space-y-3">
+            <h2 className="text-xs font-black uppercase tracking-widest text-white mb-4 pb-1 border-b border-white/15 inline-block">
+              Shop
+            </h2>
+            <div className="space-y-3">
               {shopLinks.map((link) => (
-                <Link key={link.href} href={link.href} className="block text-sm text-gray-500 transition-colors hover:text-green-600">
+                <Link 
+                  key={link.href} 
+                  href={link.href} 
+                  className="block text-xs sm:text-sm text-green-100/90 font-medium transition-colors hover:text-orange-400"
+                >
                   {link.label}
                 </Link>
               ))}
             </div>
           </div>
 
+          {/* Guarantees Column */}
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-wide text-gray-900">Why Us</h2>
-            <div className="mt-4 space-y-3">
+            <h2 className="text-xs font-black uppercase tracking-widest text-white mb-4 pb-1 border-b border-white/15 inline-block">
+              Why Us
+            </h2>
+            <div className="space-y-3">
               {helpLinks.map((label) => (
-                <p key={label} className="text-sm text-gray-500">
+                <p key={label} className="text-xs sm:text-sm text-green-100/90 font-medium">
                   {label}
                 </p>
               ))}
             </div>
           </div>
 
+          {/* Contact Details Column */}
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-wide text-gray-900">Contact</h2>
-            <div className="mt-4 space-y-3 text-sm text-gray-500">
+            <h2 className="text-xs font-black uppercase tracking-widest text-white mb-4 pb-1 border-b border-white/15 inline-block">
+              Contact
+            </h2>
+            <div className="space-y-3.5 text-xs sm:text-sm text-green-100/80 font-medium">
               <p className="flex items-center gap-3">
-                <Phone className="h-4 w-4 text-green-600" />
+                <Phone className="h-4 w-4 text-orange-400 shrink-0" />
                 +91 98765 43210
               </p>
               <p className="flex items-center gap-3">
-                <Mail className="h-4 w-4 text-green-600" />
+                <Mail className="h-4 w-4 text-green-300 shrink-0" />
                 hello@veggiemart.local
               </p>
               <p className="flex items-center gap-3">
-                <MapPin className="h-4 w-4 text-green-600" />
+                <MapPin className="h-4 w-4 text-green-300 shrink-0" />
                 Fresh Market Road, India
               </p>
               <p className="flex items-center gap-3">
-                <Truck className="h-4 w-4 text-green-600" />
+                <Truck className="h-4 w-4 text-orange-400 shrink-0" />
                 Delivery every day, 7 AM - 10 PM
               </p>
             </div>
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-3 border-t border-gray-100 pt-6 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 VeggieMart. All rights reserved.</p>
-          <p>Farm fresh vegetables, delivered with care.</p>
+        {/* Footer Sub-bottom copyrights */}
+        <div className="mt-12 flex flex-col gap-3 border-t border-white/15 pt-6 text-[10px] sm:text-xs font-bold text-green-200/50 sm:flex-row sm:items-center sm:justify-between uppercase tracking-widest">
+          <p>© 2026 Organic Vatika. All rights reserved.</p>
+          <p className="text-orange-400">Farm fresh vegetables, delivered with care.</p>
         </div>
       </div>
     </footer>

@@ -12,8 +12,11 @@ const OrderSchema = new mongoose.Schema({
     }
   ],
   totalAmount: { type: Number, required: true },
-  shippingAddress: { type: String, required: true },
+  shippingAddress: { type: String, default: 'Subscription delivery — address on file' },
   status: { type: String, default: 'Pending', enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'] },
+  // Recurring subscription tracking
+  isRecurring: { type: Boolean, default: false },
+  subscriptionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Subscription', default: null },
 }, { timestamps: true });
 
 export default mongoose.models.Order || mongoose.model('Order', OrderSchema);
