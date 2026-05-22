@@ -73,7 +73,7 @@ export default function AdminTopBar({ onMenuClick }) {
         </button>
         <div className="relative">
           <User className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-          {/* Simple dropdown placeholder */}
+          {/* Simple dropdowns placeholder */}
         </div>
       </div>
     </header>
