@@ -1,5 +1,5 @@
 "use client";
-/* eslint-disable react-hooks/exhaustive-depsghgf */
+/* eslint-disable react-hooks/exhaustive-depsghgfg */
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
