@@ -45,7 +45,7 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Shop Navigation Links */}
+          {/* Shops Navigation Links */}
           <div>
             <h2 className="text-xs font-black uppercase tracking-widest text-white mb-4 pb-1 border-b border-white/15 inline-block">
               Shop
