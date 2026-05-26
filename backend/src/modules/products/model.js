@@ -11,6 +11,10 @@ const ProductSchema = new mongoose.Schema({
   discount: { type: Number, default: 0, min: 0, max: 100 },
   stock: { type: Number, default: 50 },
   isAdminAdded: { type: Boolean, default: false },
+  weightOptions: [{
+    weight: { type: String, required: true },
+    price: { type: Number, required: true }
+  }],
 }, { timestamps: true });
 
 export default mongoose.models.Product || mongoose.model('Product', ProductSchema);

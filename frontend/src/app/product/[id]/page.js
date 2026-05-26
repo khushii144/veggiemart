@@ -56,6 +56,25 @@ function getQuantityOptions(name) {
   return type ? quantityOptions[type] : defaultOptions;
 }
 
+function parseQuantityRatio(qtyStr, baseQtyStr) {
+  if (!qtyStr || !baseQtyStr) return 1;
+  const parseToGrams = (s) => {
+    // For ranges like "400-500 g", grab the first number
+    const match = s.match(/(\d+)\s*(kg|g|piece|bunch)/i);
+    if (!match) return null;
+    let val = parseFloat(match[1]);
+    let unit = match[2].toLowerCase();
+    if (unit === 'kg') return val * 1000;
+    return val;
+  };
+  const q1 = parseToGrams(qtyStr);
+  const qBase = parseToGrams(baseQtyStr);
+  if (q1 && qBase) {
+    return q1 / qBase;
+  }
+  return 1;
+}
+
 function calcPrices(price, discountPct) {
   const pct      = Number(discountPct) || 0;
   const yourPrice = Number(price);
@@ -82,6 +101,9 @@ export default function ProductDetailPage() {
   const [subFreq, setSubFreq] = useState('weekly');
   const [subQty, setSubQty] = useState(1);
   const [deliveryDate, setDeliveryDate] = useState('Monday');
+  
+  // Add to cart click state
+  const [cartClicked, setCartClicked] = useState(false);
 
   useEffect(() => {
     setDeliveryDate(subFreq === 'weekly' ? 'Monday' : '1st of the month');
@@ -100,8 +122,11 @@ export default function ProductDetailPage() {
         setProduct(data);
         setImgSrc(data.image || fallbackImage);
         
-        const options = getQuantityOptions(data.name);
-        setQty(options[0]);
+        const hasWeightOptions = data.weightOptions && data.weightOptions.length > 0;
+        const options = hasWeightOptions
+          ? data.weightOptions.map(opt => opt.weight)
+          : getQuantityOptions(data.name);
+        setQty(options[0] || '1 kg');
 
         // Fetch related products for bottom carousel
         const allRes = await fetch('/api/products');
@@ -148,8 +173,16 @@ export default function ProductDetailPage() {
     );
   }
 
-  const { yourPrice, mrp, saving, pct } = calcPrices(product.price, product.discount);
-  const options = getQuantityOptions(product.name);
+  const hasWeightOptions = product.weightOptions && product.weightOptions.length > 0;
+  const options = hasWeightOptions
+    ? product.weightOptions.map(opt => opt.weight)
+    : getQuantityOptions(product.name);
+  
+  const selectedOption = hasWeightOptions ? product.weightOptions.find(opt => opt.weight === qty) : null;
+  const multiplier = !hasWeightOptions ? parseQuantityRatio(qty, options[0]) : 1;
+  const currentBasePrice = selectedOption ? selectedOption.price : Math.round(product.price * multiplier);
+
+  const { yourPrice, mrp, saving, pct } = calcPrices(currentBasePrice, product.discount);
   const stockCount = Number(product.stock) || 0;
   const inStock = stockCount > 0;
 
@@ -331,12 +364,20 @@ export default function ProductDetailPage() {
               
               {/* Add to Cart button */}
               <button
-                onClick={() => addToCart({ ...product, qty })}
+                onClick={() => {
+                  addToCart({ ...product, qty, price: yourPrice });
+                  setCartClicked(true);
+                  setTimeout(() => setCartClicked(false), 200);
+                }}
                 disabled={!inStock}
-                className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-extrabold text-xs uppercase tracking-widest py-4 transition-all duration-200 shadow-sm disabled:cursor-not-allowed disabled:bg-gray-400"
+                className={`flex items-center justify-center gap-2 font-extrabold text-xs uppercase tracking-widest py-4 transition-all duration-200 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400 disabled:hover:bg-white border-2 border-green-600 ${
+                  cartClicked
+                    ? 'bg-green-900 text-white border-green-900'
+                    : 'text-green-600 bg-white hover:bg-green-50'
+                }`}
               >
                 <ShoppingCart className="w-4 h-4" />
-                {inStock ? 'Add to Cart' : 'Out of Stock'}
+                {inStock ? (cartClicked ? 'Added!' : 'Add to Cart') : 'Out of Stock'}
               </button>
 
               {/* Subscribe & Save button */}

@@ -2,6 +2,7 @@ import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
+import Notification from '@/models/Notification';
 import bcrypt from 'bcryptjs';
 
 export const authOptions = {
@@ -24,6 +25,15 @@ export const authOptions = {
         if (!isValid) {
           throw new Error('Invalid password');
         }
+
+        user.lastLoginAt = new Date();
+        await user.save();
+        await Notification.create({
+          isAdmin: true,
+          title: 'Customer Login',
+          message: `${user.name} logged in with ${user.email}.`,
+          type: 'user_login',
+        });
 
         return {
           id: user._id.toString(),

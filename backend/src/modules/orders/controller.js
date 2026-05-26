@@ -1,6 +1,7 @@
 import { json } from '../../lib/response.js';
 import { getBackendSession } from '../../session.js';
 import { Order, connectDB } from './service.js';
+import { createNotification } from '../../lib/notifications.js';
 
 export async function GET(req) {
   try {
@@ -37,6 +38,13 @@ export async function POST(req) {
       items,
       totalAmount,
       shippingAddress,
+    });
+
+    await createNotification({
+      isAdmin: true,
+      title: 'New Order Received',
+      message: `${session.user.name || session.user.email} placed an order for Rs. ${Number(totalAmount || 0).toFixed(2)}.`,
+      type: 'new_order',
     });
 
     return json(order, { status: 201 });

@@ -38,12 +38,24 @@ export async function POST(req) {
         message: `Your wholesale subscription for ${productName} (${subscription.quantity} pack(s)) has been approved by the admin and is now active!`,
         type: 'approved'
       });
+      await createNotification({
+        isAdmin: true,
+        title: 'Subscription Approved',
+        message: `${subscription.userId?.name || subscription.userId?.email || 'Customer'} was approved for ${productName}.`,
+        type: 'approved',
+      });
     } else {
       await createNotification({
         userId: subscription.userId._id || subscription.userId,
         title: 'Subscription Rejected ❌',
         message: `Your wholesale subscription for ${productName} has been rejected by the admin.`,
         type: 'rejected'
+      });
+      await createNotification({
+        isAdmin: true,
+        title: 'Subscription Rejected',
+        message: `${subscription.userId?.name || subscription.userId?.email || 'Customer'} was rejected for ${productName}.`,
+        type: 'rejected',
       });
     }
 

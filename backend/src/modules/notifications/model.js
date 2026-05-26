@@ -19,7 +19,16 @@ const NotificationSchema = new mongoose.Schema({
       'renewal_reminder',
       'new_subscription',
       'recurring_failed',
-      'pending_approval'
+      'pending_approval',
+      'user_registered',
+      'user_login',
+      'product_created',
+      'product_updated',
+      'product_deleted',
+      'low_stock',
+      'wholesale_inquiry',
+      'recurring_processed',
+      'new_order'
     ]
   },
   isRead: { type: Boolean, default: false },

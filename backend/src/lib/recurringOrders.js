@@ -241,5 +241,14 @@ export async function processRecurringOrders() {
     `[${new Date().toISOString()}] Done. Processed: ${processed}, Skipped: ${skipped}, Failed: ${failed}`
   );
 
+  if (processed > 0 || failed > 0) {
+    await createNotification({
+      isAdmin: true,
+      title: 'Recurring Subscription Processing Complete',
+      message: `Processed: ${processed}, skipped: ${skipped}, failed: ${failed}.`,
+      type: failed > 0 ? 'recurring_failed' : 'recurring_processed',
+    });
+  }
+
   return { processed, skipped, failed, logs };
 }

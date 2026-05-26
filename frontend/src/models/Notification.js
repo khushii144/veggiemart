@@ -11,7 +11,10 @@ const NotificationSchema = new mongoose.Schema({
     enum: [
       'approved', 'rejected', 'cancelled', 'paused', 'resumed',
       'recurring_created', 'delivery_reminder', 'renewal_reminder',
-      'new_subscription', 'recurring_failed', 'pending_approval'
+      'new_subscription', 'recurring_failed', 'pending_approval',
+      'user_registered', 'user_login', 'product_created', 'product_updated',
+      'product_deleted', 'low_stock', 'wholesale_inquiry', 'recurring_processed',
+      'new_order'
     ]
   },
   isRead: { type: Boolean, default: false },

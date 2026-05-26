@@ -16,6 +16,7 @@ const emptyForm = {
   description: '',
   image: '',
   categorySlug: '',
+  weightOptions: [],
 };
 
 const ITEMS_PER_PAGE = 10;
@@ -102,6 +103,7 @@ export default function AdminProducts() {
       description: product.description || '',
       image: product.image || '',
       categorySlug: product.categorySlug || categories.find((category) => category.name === product.category)?.slug || '',
+      weightOptions: product.weightOptions || [],
     });
     setShowModal(true);
   };
@@ -122,6 +124,7 @@ export default function AdminProducts() {
         price: parseFloat(formData.price),
         discount: Math.min(100, Math.max(0, parseFloat(formData.discount) || 0)),
         stock: Math.max(1, parseInt(formData.stock, 10) || 50),
+        weightOptions: formData.weightOptions.map(o => ({ weight: o.weight, price: parseFloat(o.price) })),
         ...(editingProductId && { _id: editingProductId }),
       };
 
@@ -413,6 +416,63 @@ export default function AdminProducts() {
                   Enter 0 to show no offer. Max 100.
                 </p>
               </div>
+
+              {/* ── Weight Options (Dynamic Pricing) ── */}
+              <div className="rounded-2xl border border-dashed border-green-200 bg-green-50/40 p-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-green-600 mb-3">⚖️ Weight Options (Dynamic Pricing)</p>
+                {formData.weightOptions.map((opt, idx) => (
+                  <div key={idx} className="flex gap-2 mb-2 items-center">
+                    <input
+                      type="text"
+                      placeholder="e.g., 500g"
+                      className="flex-1 p-3 bg-white border border-gray-200 rounded-xl outline-none"
+                      value={opt.weight}
+                      onChange={(e) => {
+                        const newOpts = [...formData.weightOptions];
+                        newOpts[idx].weight = e.target.value;
+                        setFormData({ ...formData, weightOptions: newOpts });
+                      }}
+                      required
+                    />
+                    <input
+                      type="number"
+                      step="0.01"
+                      placeholder="Price (₹)"
+                      className="flex-1 p-3 bg-white border border-gray-200 rounded-xl outline-none"
+                      value={opt.price}
+                      onChange={(e) => {
+                        const newOpts = [...formData.weightOptions];
+                        newOpts[idx].price = e.target.value;
+                        setFormData({ ...formData, weightOptions: newOpts });
+                      }}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newOpts = formData.weightOptions.filter((_, i) => i !== idx);
+                        setFormData({ ...formData, weightOptions: newOpts });
+                      }}
+                      className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-colors"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData({ ...formData, weightOptions: [...formData.weightOptions, { weight: '', price: '' }] });
+                  }}
+                  className="mt-2 flex items-center gap-2 text-xs font-bold text-green-600 hover:text-green-700 transition-colors"
+                >
+                  <Plus className="w-4 h-4" /> Add Weight Option
+                </button>
+                <p className="mt-2 text-[11px] text-gray-500">
+                  If you add weight options, base price above will be ignored on the storefront for variant selection, but is still used as default.
+                </p>
+              </div>
+
               <input
                 type="text"
                 placeholder="Image URL"

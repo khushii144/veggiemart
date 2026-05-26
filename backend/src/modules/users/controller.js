@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { json } from '../../lib/response.js';
 import { User, connectDB } from './service.js';
+import { createNotification } from '../../lib/notifications.js';
 
 export async function POST(req) {
   try {
@@ -17,7 +18,14 @@ export async function POST(req) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    await User.create({ name, email, password: hashedPassword });
+    const user = await User.create({ name, email, password: hashedPassword });
+
+    await createNotification({
+      isAdmin: true,
+      title: 'New Customer Registered',
+      message: `${user.name} registered with ${user.email}.`,
+      type: 'user_registered',
+    });
 
     return json({ message: 'User registered successfully' }, { status: 201 });
   } catch (error) {

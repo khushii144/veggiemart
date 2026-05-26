@@ -501,19 +501,29 @@ export default function Navbar() {
               {/* Login / Sign Up or Sign Out Buttons */}
               <div className="hidden lg:flex items-center gap-2">
                 {session ? (
-                  <>
-                    <div className="flex items-center gap-1.5 text-gray-700 bg-gray-50/80 px-3 py-2 border border-gray-100">
+                  <div className="relative group z-50">
+                    <button className="flex items-center gap-1.5 text-gray-700 bg-gray-50/80 px-3 py-2 border border-gray-100 hover:bg-white cursor-pointer">
                       <User className="w-3.5 h-3.5 text-green-600" />
                       <span className="text-xs font-bold max-w-[110px] truncate">{session.user.name}</span>
-                    </div>
-                    <button
-                      onClick={() => signOut()}
-                      className="inline-flex h-10 items-center justify-center bg-gray-100 hover:bg-gray-200 px-4 text-xs font-bold text-gray-700 transition-all duration-300"
-                    >
-                      <LogOut className="w-3.5 h-3.5 mr-2 text-gray-500" />
-                      <span>Logout</span>
                     </button>
-                  </>
+                    
+                    {/* Dropdown Menu */}
+                    <div className="absolute right-0 mt-0 w-48 bg-white border border-gray-100 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pt-2 pb-2">
+                      <Link
+                        href="/profile"
+                        className="block px-4 py-2 text-xs font-bold text-gray-700 hover:bg-green-50 hover:text-green-700"
+                      >
+                        My Profile
+                      </Link>
+                      <button
+                        onClick={() => signOut()}
+                        className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        Logout
+                      </button>
+                    </div>
+                  </div>
                 ) : (
                   <Link
                     href="/login"
@@ -641,30 +651,7 @@ export default function Navbar() {
               )}
             </div>
 
-            {session && (
-              <>
-                <Link 
-                  href="/orders" 
-                  className={`px-4 py-2 text-xs font-extrabold transition-all duration-300 ${
-                    pathname === '/orders'
-                      ? 'bg-green-600 text-white shadow-md shadow-green-600/10' 
-                      : 'text-gray-600 hover:text-green-600 hover:bg-gray-50'
-                  }`}
-                >
-                  Orders
-                </Link>
-                <Link 
-                  href="/subscriptions" 
-                  className={`px-4 py-2 text-xs font-extrabold transition-all duration-300 ${
-                    pathname === '/subscriptions'
-                      ? 'bg-green-600 text-white shadow-md shadow-green-600/10' 
-                      : 'text-gray-600 hover:text-green-600 hover:bg-gray-50'
-                  }`}
-                >
-                  Subscriptions
-                </Link>
-              </>
-            )}
+
 
             {session?.user?.role === 'admin' && (
               <Link 
@@ -765,24 +752,14 @@ export default function Navbar() {
                   <p className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Account</p>
                   <div className="mt-5 flex flex-col gap-1">
                     {session ? (
-                      <>
-                        <Link
-                          href="/orders"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center gap-4 px-1 py-3 text-base font-bold text-gray-950 transition hover:text-green-700"
-                        >
-                          <Package className="h-5 w-5 text-gray-900" />
-                          Orders
-                        </Link>
-                        <Link
-                          href="/subscriptions"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center gap-4 px-1 py-3 text-base font-bold text-gray-950 transition hover:text-green-700"
-                        >
-                          <Clock className="h-5 w-5 text-gray-900" />
-                          Subscriptions
-                        </Link>
-                      </>
+                      <Link
+                        href="/profile"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-4 px-1 py-3 text-base font-bold text-gray-950 transition hover:text-green-700"
+                      >
+                        <User className="h-5 w-5 text-gray-900" />
+                        My Profile
+                      </Link>
                     ) : (
                       <Link
                         href="/login"

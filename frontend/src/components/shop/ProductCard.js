@@ -49,6 +49,25 @@ function getQuantityOptions(name) {
   return type ? quantityOptions[type] : defaultOptions;
 }
 
+function parseQuantityRatio(qtyStr, baseQtyStr) {
+  if (!qtyStr || !baseQtyStr) return 1;
+  const parseToGrams = (s) => {
+    // For ranges like "400-500 g", grab the first number
+    const match = s.match(/(\d+)\s*(kg|g|piece|bunch)/i);
+    if (!match) return null;
+    let val = parseFloat(match[1]);
+    let unit = match[2].toLowerCase();
+    if (unit === 'kg') return val * 1000;
+    return val;
+  };
+  const q1 = parseToGrams(qtyStr);
+  const qBase = parseToGrams(baseQtyStr);
+  if (q1 && qBase) {
+    return q1 / qBase;
+  }
+  return 1;
+}
+
 /* Derive MRP from the stored selling price + discount saved on the product */
 function calcPrices(price, discountPct) {
   const pct      = Number(discountPct) || 0;
@@ -63,9 +82,19 @@ function calcPrices(price, discountPct) {
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
   const [imgSrc, setImgSrc]   = useState(product.image || fallbackImage);
-  const options               = getQuantityOptions(product.name || '');
-  const [qty, setQty]         = useState(options[0]);
-  const { yourPrice, mrp, saving, pct } = calcPrices(product.price, product.discount);
+  
+  const hasWeightOptions = product.weightOptions && product.weightOptions.length > 0;
+  const options = hasWeightOptions
+    ? product.weightOptions.map(opt => opt.weight)
+    : getQuantityOptions(product.name || '');
+
+  const [qty, setQty]         = useState(options[0] || '1 kg');
+  
+  const selectedOption = hasWeightOptions ? product.weightOptions.find(opt => opt.weight === qty) : null;
+  const multiplier = !hasWeightOptions ? parseQuantityRatio(qty, options[0]) : 1;
+  const currentBasePrice = selectedOption ? selectedOption.price : Math.round(product.price * multiplier);
+
+  const { yourPrice, mrp, saving, pct } = calcPrices(currentBasePrice, product.discount);
   const stockCount = Number(product.stock) || 0;
   const inStock = stockCount > 0;
 
@@ -74,6 +103,9 @@ export default function ProductCard({ product }) {
   const [subFreq, setSubFreq] = useState('weekly');
   const [subQty, setSubQty] = useState(1);
   const [deliveryDate, setDeliveryDate] = useState('Monday');
+  
+  // Add to cart click state
+  const [cartClicked, setCartClicked] = useState(false);
 
   useEffect(() => {
     setDeliveryDate(subFreq === 'weekly' ? 'Monday' : '1st of the month');
@@ -199,13 +231,29 @@ export default function ProductCard({ product }) {
 
         {/* add to cart button */}
         <button
-          onClick={() => addToCart({ ...product, qty })}
+          onClick={() => {
+            addToCart({ ...product, qty, price: yourPrice });
+            setCartClicked(true);
+            setTimeout(() => setCartClicked(false), 200);
+          }}
           disabled={!inStock}
-          style={{ ...styles.cartBtn, ...(!inStock ? styles.disabledBtn : {}) }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = '#15803d')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = '#16a34a')}
+          style={{ 
+            ...styles.subBtn, 
+            ...(!inStock ? styles.disabledSubBtn : {}),
+            ...(cartClicked ? { background: '#14532d', color: '#fff' } : {}) 
+          }}
+          onMouseEnter={(e) => {
+            if (cartClicked) return;
+            e.currentTarget.style.background = '#f4fbf7';
+            e.currentTarget.style.color = '#15803d';
+          }}
+          onMouseLeave={(e) => {
+            if (cartClicked) return;
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = '#16a34a';
+          }}
         >
-          {inStock ? 'Add to Cart' : 'Out of Stock'}
+          {inStock ? (cartClicked ? 'Added!' : 'Add to Cart') : 'Out of Stock'}
         </button>
 
         {/* subscribe & save button */}

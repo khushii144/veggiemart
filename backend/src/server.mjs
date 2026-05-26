@@ -31,6 +31,7 @@ loadEnvFile('.env');
 const port = Number(process.env.PORT || 5000);
 
 const routes = [
+  route('/api/admin/customers',               await import('./modules/users/admin-customers.route.js')),
   route('/api/admin/run-recurring',           await import('./modules/recurring/admin-run.route.js')),
   route('/api/admin/subscriptions/verify',    await import('./modules/subscriptions/verify.route.js')),
   route('/api/admin/subscriptions',           await import('./modules/subscriptions/admin.route.js')),

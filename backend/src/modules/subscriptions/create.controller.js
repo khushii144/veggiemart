@@ -51,8 +51,8 @@ export async function POST(req) {
 
     await createNotification({
       isAdmin: true,
-      title: 'New Subscription Pending Approval 🔔',
-      message: `Customer ${session.user.name || session.user.email} requested a new ${frequency} subscription for ${productName} (${qty} pack(s)).`,
+      title: 'Wholesale Subscription Request',
+      message: `${session.user.name || session.user.email} requested a new ${frequency} subscription for ${productName} (${qty} pack(s)).`,
       type: 'pending_approval'
     });
 
