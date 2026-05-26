@@ -8,6 +8,12 @@ export async function getBackendSession(req) {
       headers[key.toLowerCase()] = value;
     }
 
+    const secret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
+    if (!secret) {
+      console.warn('[Auth] NEXTAUTH_SECRET/AUTH_SECRET is missing in backend environment');
+      return null;
+    }
+
     // Create a mock NextApiRequest-like object that next-auth/jwt understands perfectly
     const mockReq = {
       headers,
@@ -21,9 +27,20 @@ export async function getBackendSession(req) {
 
     const token = await getToken({
       req: mockReq,
-      secret: process.env.NEXTAUTH_SECRET,
-      secureCookie: false, // Explicitly tell it to look for the non-secure local cookie
+      secret,
+      secureCookie: true,
+    }) || await getToken({
+      req: mockReq,
+      secret,
+      secureCookie: false,
     });
+
+    if (!token) {
+      console.warn('[Auth] No valid next-auth token found on request');
+      if (headers.cookie) {
+        console.warn('[Auth] Cookie header present but token decode failed');
+      }
+    }
 
     if (!token) {
       return null;

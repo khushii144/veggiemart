@@ -157,6 +157,7 @@ export default function ProductDetailPage() {
     try {
       const response = await fetch('/api/subscription/create', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

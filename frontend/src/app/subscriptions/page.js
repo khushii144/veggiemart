@@ -22,7 +22,7 @@ export default function SubscriptionsPage() {
 
   async function fetchSubscriptions() {
     try {
-      const res = await fetch('/api/subscription/user');
+      const res = await fetch('/api/subscription/user', { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setSubscriptions(data);
@@ -60,6 +60,7 @@ export default function SubscriptionsPage() {
     try {
       const res = await fetch('/api/subscription/update', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -104,6 +105,7 @@ export default function SubscriptionsPage() {
     try {
       const res = await fetch('/api/subscription/cancel', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -142,6 +144,7 @@ export default function SubscriptionsPage() {
     try {
       const res = await fetch('/api/subscription/status', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

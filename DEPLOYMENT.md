@@ -21,6 +21,13 @@ NEXTAUTH_URL=https://yourdomain.vercel.app (or your custom domain)
 CRON_SECRET=<your-cron-secret>
 ```
 
+If your backend is deployed separately (for example on Render), make sure the backend also has the same shared secret and production origin:
+```
+NEXTAUTH_SECRET=<same-nextauth-secret-as-frontend>
+FRONTEND_ORIGIN=https://yourdomain.vercel.app
+NEXTAUTH_URL=https://yourdomain.vercel.app
+```
+
 ### 3. No Hardcoded Localhost URLs
 ✅ **Verified**: The application uses relative API URLs (`/api/products`, `/api/categories`, etc.), which work correctly in both development and production.
 

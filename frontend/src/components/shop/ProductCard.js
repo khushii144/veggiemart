@@ -87,6 +87,7 @@ export default function ProductCard({ product }) {
     try {
       const response = await fetch('/api/subscription/create', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
